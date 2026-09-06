@@ -1,113 +1,34 @@
 import json
-from pathlib import Path
 
-import psycopg2
-
-
-# ==========================================
-# PATH
-# ==========================================
-
-BASE_DIR = Path(__file__).resolve().parents[1]
-
-JSON_FILE = BASE_DIR / "train" / "stations.json"
+from db import BASE_DIR, connect
 
 
-# ==========================================
-# DATABASE CONFIGURATION
-# ==========================================
-
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_NAME = "railseat"
-DB_USER = "postgres"
-DB_PASSWORD = "2005"
-
-
-# ==========================================
-# CONNECT TO POSTGRESQL
-# ==========================================
-
-connection = psycopg2.connect(
-    host=DB_HOST,
-    port=DB_PORT,
-    database=DB_NAME,
-    user=DB_USER,
-    password=DB_PASSWORD
-)
-
-cursor = connection.cursor()
-
-print("Connected to PostgreSQL")
-
-
-# ==========================================
-# READ JSON
-# ==========================================
-
-with open(JSON_FILE, "r", encoding="utf-8") as file:
-    data = json.load(file)
-
-features = data["features"]
-
-print(f"Stations found: {len(features)}")
+def main():
+    data = json.loads((BASE_DIR / "train" / "stations.json").read_text(encoding="utf-8"))
+    inserted = 0
+    with connect() as connection, connection.cursor() as cursor:
+        for feature in data.get("features", []):
+            p = feature.get("properties", {})
+            code, name = p.get("code"), p.get("name")
+            if not code or not name:
+                continue
+            geometry = feature.get("geometry") or {}
+            coordinates = geometry.get("coordinates") or [None, None]
+            cursor.execute(
+                """
+                INSERT INTO stations (code, name, state, latitude, longitude)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (code) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    state = COALESCE(EXCLUDED.state, stations.state),
+                    latitude = COALESCE(EXCLUDED.latitude, stations.latitude),
+                    longitude = COALESCE(EXCLUDED.longitude, stations.longitude)
+                """,
+                (code, name, p.get("state"), coordinates[1], coordinates[0]),
+            )
+            inserted += cursor.rowcount
+    print(f"Stations processed: {inserted}")
 
 
-# ==========================================
-# INSERT STATIONS
-# ==========================================
-
-inserted = 0
-skipped = 0
-
-for feature in features:
-
-    properties = feature.get("properties", {})
-
-    code = properties.get("code")
-    name = properties.get("name")
-    state = properties.get("state")
-    zone = properties.get("zone")
-
-    # Skip invalid records
-    if not code or not name:
-        skipped += 1
-        continue
-
-    cursor.execute(
-        """
-        INSERT INTO stations
-            (code, name, state, zone)
-        VALUES
-            (%s, %s, %s, %s)
-        ON CONFLICT (code) DO NOTHING
-        """,
-        (code, name, state, zone)
-    )
-
-    if cursor.rowcount == 1:
-        inserted += 1
-    else:
-        skipped += 1
-
-
-# ==========================================
-# SAVE
-# ==========================================
-
-connection.commit()
-
-
-# ==========================================
-# CLOSE
-# ==========================================
-
-cursor.close()
-connection.close()
-
-
-print("--------------------------------")
-print("Import completed")
-print(f"Inserted: {inserted}")
-print(f"Skipped:  {skipped}")
-print("--------------------------------")
+if __name__ == "__main__":
+    main()
