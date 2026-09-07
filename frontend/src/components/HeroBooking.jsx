@@ -73,10 +73,10 @@ export default function HeroBooking() {
               </button>
               
               <button 
-                onClick={() => document.getElementById('3d-section').scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' })}
                 className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl px-8 py-4 font-bold text-lg tracking-wide transition-all backdrop-blur-sm active:scale-95 flex items-center gap-2"
               >
-                Explore 3D Seats <ChevronDown className="w-5 h-5" />
+                Learn More <ChevronDown className="w-5 h-5" />
               </button>
             </motion.div>
             

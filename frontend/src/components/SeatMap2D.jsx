@@ -4,16 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generate2DLayout, getSeatAvailability } from '../coachData';
 
 export default function SeatMap2D({ classCode, coachId, selectedSeats, recommendedSeatId, onToggleSeat }) {
-  const [tooltip, setTooltip] = useState({ show: false, x: 0, y: 0, seat: null });
+  const [preview, setPreview] = useState({ show: false, seat: null });
 
   // Generate the pure layout template (doesn't contain status)
   const layout = useMemo(() => generate2DLayout(classCode), [classCode]);
 
-  const handleHover = (e, seat, status) => {
-    if (seat) {
-      setTooltip({ show: true, x: e.clientX, y: e.clientY, seat: { ...seat, status } });
-    } else {
-      setTooltip({ ...tooltip, show: false });
+  const handleSingleClick = (e, seat, status) => {
+    setPreview({ show: true, seat: { ...seat, status } });
+  };
+
+  const handleDoubleClick = (e, seat, status) => {
+    if (status === 'available' || status === 'RAC') {
+      onToggleSeat(seat.id);
     }
   };
 
@@ -27,10 +29,13 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
     const isSelected = selectedSeats.includes(seat.id);
     const isRecommended = seat.id === recommendedSeatId && !isSelected;
 
+    const isPreviewed = preview.show && preview.seat?.id === seat.id;
+
     let bgClass = '';
     if (isSelected) bgClass = 'bg-rose-600 text-white border-rose-600 shadow-md z-10';
+    else if (isPreviewed) bgClass = 'bg-stone-800 border-stone-500 text-stone-200 shadow-lg z-10 ring-2 ring-stone-500/50';
     else if (isRecommended) bgClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500 shadow-xl shadow-black/20 z-10 ring-2 ring-emerald-500/30 animate-[pulse_2s_ease-in-out_infinite]';
-    else if (isAvail) bgClass = 'bg-stone-900 border-stone-700 text-stone-200 hover:border-rose-700 hover:text-rose-500 hover:shadow-xl shadow-black/20 cursor-pointer';
+    else if (isAvail) bgClass = 'bg-stone-900 border-stone-700 text-stone-200 hover:border-stone-500 hover:shadow-xl shadow-black/20 cursor-pointer';
     else if (isRAC) bgClass = 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 cursor-pointer';
     else bgClass = 'bg-stone-900/50 border-stone-800 text-stone-500 cursor-not-allowed opacity-60';
 
@@ -39,10 +44,9 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
     return (
       <div 
         className={`relative flex items-center justify-center text-[11px] font-bold rounded-md border transition-all duration-200 ${bgClass} 
-          ${isChair ? 'w-10 h-10' : 'w-12 h-8'}`}
-        onClick={() => (isAvail || isRAC) && onToggleSeat(seat.id)}
-        onMouseEnter={(e) => handleHover(e, seat, status)}
-        onMouseLeave={(e) => handleHover(e, null)}
+          ${isChair ? 'w-10 h-10' : 'w-12 h-8'} select-none`}
+        onClick={(e) => handleSingleClick(e, seat, status)}
+        onDoubleClick={(e) => handleDoubleClick(e, seat, status)}
       >
         {seat.id}
         {isOcc && <User className="absolute w-5 h-5 text-stone-300" strokeWidth={3} />}
@@ -56,8 +60,8 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-6 bg-stone-900/95 border border-stone-800 rounded-xl p-4 mb-8 sticky top-0 z-20 backdrop-blur shadow-xl shadow-black/20">
         <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-stone-900 border border-stone-700"></div><span className="text-sm text-stone-300 font-medium">Available</span></div>
+        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-stone-800 border border-stone-500 ring-1 ring-stone-500/50"></div><span className="text-sm text-stone-300 font-medium">Previewed</span></div>
         <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-rose-600 border border-rose-600 shadow-xl shadow-black/20"></div><span className="text-sm text-white font-bold">Selected</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-emerald-500/10 border border-emerald-500 shadow-xl shadow-black/20 ring-1 ring-emerald-500/30"></div><span className="text-sm text-emerald-400 font-bold">Recommended</span></div>
         <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-amber-50 border border-amber-300"></div><span className="text-sm text-amber-700 font-medium">RAC</span></div>
         <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-stone-900/50 border border-stone-800 flex items-center justify-center"><User className="w-3 h-3 text-stone-300" /></div><span className="text-sm text-stone-500 font-medium">Occupied</span></div>
       </div>
@@ -114,30 +118,40 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
         </div>
       </div>
 
-      {/* Floating Tooltip */}
+      {/* Preview Panel instead of Floating Tooltip */}
       <AnimatePresence>
-        {tooltip.show && tooltip.seat && (
+        {preview.show && preview.seat && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.15 }}
-            style={{ left: tooltip.x + 15, top: tooltip.y + 15 }}
-            className="fixed z-50 bg-stone-900 border border-stone-800 shadow-xl rounded-lg p-3 pointer-events-none min-w-[140px]"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 bg-stone-900 border border-stone-800 shadow-[0_10px_30px_rgba(0,0,0,0.5)] rounded-xl p-4 flex flex-col items-center min-w-[200px]"
           >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-black text-rose-400 text-lg">{tooltip.seat.id}</span>
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                tooltip.seat.status === 'available' ? 'bg-stone-900/50 text-stone-300' : 
-                tooltip.seat.status === 'RAC' ? 'bg-amber-50 text-amber-600' : 'bg-stone-800 text-stone-500'
+            <button 
+              onClick={() => setPreview({ show: false, seat: null })}
+              className="absolute top-2 right-2 text-stone-500 hover:text-white"
+            >
+              ×
+            </button>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-black text-rose-400 text-2xl">{preview.seat.id}</span>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
+                preview.seat.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                preview.seat.status === 'RAC' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-stone-800 text-stone-500'
               }`}>
-                {tooltip.seat.status}
+                {preview.seat.status}
               </span>
             </div>
-            <div className="text-white font-bold text-sm">{tooltip.seat.type}</div>
-            <div className="text-stone-500 text-xs mt-0.5 flex items-center gap-1 font-medium">
-              <Info className="w-3 h-3" /> {tooltip.seat.pos}
+            <div className="text-white font-bold text-sm mb-1">{preview.seat.type}</div>
+            <div className="text-stone-500 text-xs flex items-center gap-1 font-medium mb-3">
+              <Info className="w-3 h-3" /> {preview.seat.pos}
             </div>
+            {(preview.seat.status === 'available' || preview.seat.status === 'RAC') && (
+              <p className="text-stone-400 text-[10px] uppercase font-bold tracking-widest text-center mt-1">
+                Double-click to select
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

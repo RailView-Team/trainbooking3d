@@ -7,8 +7,8 @@ const MOCK_TRAINS = [
   {
     id: 'TR-104',
     name: 'AeroExpress 104',
-    departure: { time: '08:30 AM', station: 'NYP' },
-    arrival: { time: '11:15 AM', station: 'WAS' },
+    departure: { time: '08:30 AM', station: 'KOL' },
+    arrival: { time: '11:15 AM', station: 'DEL' },
     duration: '2h 45m',
     durationMinutes: 165,
     stops: 2,
@@ -24,8 +24,8 @@ const MOCK_TRAINS = [
   {
     id: 'TR-209',
     name: 'Regional Rail 209',
-    departure: { time: '10:00 AM', station: 'NYP' },
-    arrival: { time: '01:30 PM', station: 'WAS' },
+    departure: { time: '10:00 AM', station: 'KOL' },
+    arrival: { time: '01:30 PM', station: 'DEL' },
     duration: '3h 30m',
     durationMinutes: 210,
     stops: 5,
@@ -41,8 +41,8 @@ const MOCK_TRAINS = [
   {
     id: 'TR-055',
     name: 'AeroRail Direct 055',
-    departure: { time: '02:15 PM', station: 'NYP' },
-    arrival: { time: '04:30 PM', station: 'WAS' },
+    departure: { time: '02:15 PM', station: 'KOL' },
+    arrival: { time: '04:30 PM', station: 'DEL' },
     duration: '2h 15m',
     durationMinutes: 135,
     stops: 0,
@@ -58,8 +58,8 @@ const MOCK_TRAINS = [
   {
     id: 'TR-312',
     name: 'Night Rider 312',
-    departure: { time: '08:00 PM', station: 'NYP' },
-    arrival: { time: '11:45 PM', station: 'WAS' },
+    departure: { time: '08:00 PM', station: 'KOL' },
+    arrival: { time: '11:45 PM', station: 'DEL' },
     duration: '3h 45m',
     durationMinutes: 225,
     stops: 6,
@@ -82,19 +82,19 @@ const getAmenityIcon = (amenity) => {
   return <CheckCircle2 className="w-3.5 h-3.5" />;
 };
 
-function TrainCard({ train }) {
+function TrainCard({ train, onSelectTrain }) {
   const [expanded, setExpanded] = useState(false);
   const [selectedClass, setSelectedClass] = useState(train.classes.find(c => c.available > 0) || train.classes[0]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-white border transition-all duration-300 rounded-[2rem] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)]
         ${expanded ? 'border-rose-700/50 ring-1 ring-rose-700/10' : 'border-stone-200/60 hover:border-stone-300/80'}`}
     >
       {/* Main Card Header */}
-      <div 
+      <div
         className="p-5 cursor-pointer flex flex-col md:flex-row md:items-center gap-6"
         onClick={() => setExpanded(!expanded)}
       >
@@ -156,7 +156,7 @@ function TrainCard({ train }) {
           >
             <div className="border-t border-stone-100 bg-stone-50 p-6">
               <div className="flex flex-col lg:flex-row gap-8">
-                
+
                 {/* Amenities & Info */}
                 <div className="flex-1 space-y-6">
                   <div>
@@ -184,16 +184,15 @@ function TrainCard({ train }) {
                     {train.classes.map((c) => {
                       const isSoldOut = c.available === 0;
                       const isSelected = selectedClass.name === c.name;
-                      
+
                       return (
-                        <div 
+                        <div
                           key={c.name}
                           onClick={() => !isSoldOut && setSelectedClass(c)}
-                          className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                            isSoldOut ? 'opacity-50 cursor-not-allowed border-stone-100 bg-stone-50 text-stone-400' : 
-                            isSelected ? 'border-rose-700/30 bg-rose-50' : 
-                            'border-stone-200/60 bg-white hover:border-stone-300/80 cursor-pointer'
-                          }`}
+                          className={`flex items-center justify-between p-3 rounded-xl border transition-all ${isSoldOut ? 'opacity-50 cursor-not-allowed border-stone-100 bg-stone-50 text-stone-400' :
+                              isSelected ? 'border-rose-700/30 bg-rose-50' :
+                                'border-stone-200/60 bg-white hover:border-stone-300/80 cursor-pointer'
+                            }`}
                         >
                           <div>
                             <div className={`font-semibold ${isSelected ? 'text-rose-800' : isSoldOut ? 'text-stone-400' : 'text-stone-700'}`}>{c.name}</div>
@@ -209,8 +208,14 @@ function TrainCard({ train }) {
                     })}
                   </div>
 
-                  <button className="w-full bg-stone-900 hover:bg-stone-800 text-white rounded-xl py-3.5 font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.16)] hover:-translate-y-0.5 active:translate-y-0 mt-2">
-                    View 3D Seats
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSelectTrain) onSelectTrain(train.id);
+                    }}
+                    className="w-full bg-stone-900 hover:bg-stone-800 text-white rounded-xl py-3.5 font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.16)] hover:-translate-y-0.5 active:translate-y-0 mt-2"
+                  >
+                    Select Train
                   </button>
                 </div>
 
@@ -240,7 +245,7 @@ function SkeletonCard() {
   );
 }
 
-export default function TrainResults() {
+export default function TrainResults({ fromLabel, toLabel, onSelectTrain }) {
   const [loading, setLoading] = useState(true);
   const [filterStops, setFilterStops] = useState('All'); // 'All', 'Direct'
   const [sortBy, setSortBy] = useState('Price'); // 'Price', 'Duration', 'Departure'
@@ -256,7 +261,7 @@ export default function TrainResults() {
     if (filterStops === 'Direct') {
       result = result.filter(t => t.stops === 0);
     }
-    
+
     if (sortBy === 'Price') result.sort((a, b) => a.fare - b.fare);
     if (sortBy === 'Duration') result.sort((a, b) => a.durationMinutes - b.durationMinutes);
     if (sortBy === 'Departure') {
@@ -273,14 +278,14 @@ export default function TrainResults() {
   return (
     <section className="relative z-10 bg-[#faf9f6] py-16 md:py-24">
       <div className="container mx-auto px-6 md:px-12 max-w-5xl">
-        
+
         {/* Header & Controls */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <h2 className="text-3xl font-bold text-stone-900 mb-2">Available Trains</h2>
-            <p className="text-stone-500 font-medium">New York (NYP) to Washington DC (WAS)</p>
+            <p className="text-stone-500 font-medium">{fromLabel || 'New York (NYP)'} to {toLabel || 'Washington DC (WAS)'}</p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             {/* Stops Filter */}
             <div className="flex items-center bg-white border border-stone-200 rounded-lg p-1 shadow-sm">
@@ -303,7 +308,7 @@ export default function TrainResults() {
               </div>
               <div className="absolute top-full right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-stone-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
                 {['Price', 'Duration', 'Departure'].map(opt => (
-                  <div 
+                  <div
                     key={opt}
                     onClick={() => setSortBy(opt)}
                     className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 cursor-pointer first:rounded-t-lg last:rounded-b-lg"
@@ -326,18 +331,18 @@ export default function TrainResults() {
             </>
           ) : filteredTrains.length > 0 ? (
             filteredTrains.map(train => (
-              <TrainCard key={train.id} train={train} />
+              <TrainCard key={train.id} train={train} onSelectTrain={onSelectTrain} />
             ))
           ) : (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               className="bg-white border border-stone-200 border-dashed rounded-2xl p-12 text-center shadow-sm"
             >
               <Filter className="w-12 h-12 text-stone-300 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-stone-900 mb-2">No trains found</h3>
               <p className="text-stone-500">Try adjusting your filters to see more results.</p>
-              <button 
+              <button
                 onClick={() => setFilterStops('All')}
                 className="mt-6 text-rose-700 font-bold hover:text-rose-800"
               >

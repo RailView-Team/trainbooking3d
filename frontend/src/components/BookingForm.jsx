@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Search, ArrowRightLeft, Clock, TrendingUp, Check, Loader2, Calendar, Users, ChevronDown } from 'lucide-react';
 
-const MOCK_STATIONS = [
+export const MOCK_STATIONS = [
   { code: 'KOL', city: 'Kolkata', name: 'Sealdh Station' },
   { code: 'BOM', city: 'Mumbai', name: 'Central Station' },
   { code: 'DEL', city: 'Delhi', name: 'New Delhi Station' },
@@ -20,9 +21,13 @@ const POPULAR_ROUTES = [
 ];
 
 export default function BookingForm() {
+  const navigate = useNavigate();
   const [from, setFrom] = useState(null);
   const [to, setTo] = useState(null);
-  const [date, setDate] = useState('Today');
+  const [date, setDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [passengers, setPassengers] = useState(1);
   const [travelClass, setTravelClass] = useState('Economy');
   
@@ -58,12 +63,34 @@ export default function BookingForm() {
       setError('Origin and destination cannot be the same.');
       return;
     }
+    if (!date) {
+      setError('Please select a travel date.');
+      return;
+    }
     
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      alert(`Searching trains from ${from.city} to ${to.city} for ${passengers} passenger(s)...`);
-    }, 1500);
+      const params = new URLSearchParams({
+        from: from.code,
+        to: to.code,
+        date: date,
+        passengers: passengers.toString(),
+        class: travelClass,
+      });
+      navigate(`/trains?${params.toString()}`);
+    }, 600);
+  };
+
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return 'Select Date';
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    dateObj.setHours(0, 0, 0, 0);
+    if (dateObj.getTime() === today.getTime()) return 'Today';
+    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
   const filteredStations = MOCK_STATIONS.filter(s => 
@@ -220,14 +247,21 @@ export default function BookingForm() {
         <div className="flex gap-3 relative">
           {/* Date Picker */}
           <div 
-            className="bg-stone-50 rounded-2xl p-4 lg:p-5 border border-stone-200 hover:border-stone-300 hover:bg-stone-100/50 transition-colors cursor-pointer group flex-1 sm:min-w-[140px]"
+            className="bg-stone-50 rounded-2xl p-4 lg:p-5 border border-stone-200 hover:border-stone-300 hover:bg-stone-100/50 transition-colors cursor-pointer group flex-1 sm:min-w-[140px] relative"
           >
             <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 block">Date</span>
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-rose-700 opacity-70 group-hover:opacity-100 transition-opacity" />
-              <span className="text-stone-900 font-semibold text-lg">{date}</span>
+              <span className="text-stone-900 font-semibold text-lg">{formatDateDisplay(date)}</span>
               <ChevronDown className="w-4 h-4 text-stone-400 ml-auto" />
             </div>
+            <input
+              type="date"
+              value={date}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setDate(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            />
           </div>
 
           {/* Passenger & Class */}
