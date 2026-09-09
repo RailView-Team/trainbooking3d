@@ -1,0 +1,169 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------
+// USER
+// ---------------------------------------------
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+
+  bookings     Booking[]
+}
+
+// ---------------------------------------------
+// STATION
+// ---------------------------------------------
+model Station {
+  id   Int    @id @default(autoincrement())
+  name String
+  code String @unique
+
+  trainStations       TrainStation[]
+  currentForTrains     Train[] @relation("CurrentStation")
+  nextForTrains         Train[] @relation("NextStation")
+  boardingBookings     Booking[] @relation("BoardingStation")
+  destinationBookings Booking[] @relation("DestinationStation")
+}
+
+// ---------------------------------------------
+// TRAIN
+// ---------------------------------------------
+enum TrainStatus {
+  NOT_STARTED
+  RUNNING
+  ARRIVED
+  COMPLETED
+}
+
+model Train {
+  id          Int         @id @default(autoincrement())
+  trainNumber String      @unique
+  name        String
+  status      TrainStatus @default(NOT_STARTED)
+
+  // Simulated real-time location
+  currentStationId       Int?
+  currentStation         Station? @relation("CurrentStation", fields: [currentStationId], references: [id])
+  currentStationSequence Int?
+
+  nextStationId Int?
+  nextStation   Station? @relation("NextStation", fields: [nextStationId], references: [id])
+
+  lastLocationUpdate DateTime?
+
+  trainStations TrainStation[]
+  coaches       Coach[]
+  bookings      Booking[]
+}
+
+// ---------------------------------------------
+// TRAIN STATION (route with sequence + timings)
+// ---------------------------------------------
+model TrainStation {
+  id            Int      @id @default(autoincrement())
+  trainId       Int
+  train         Train    @relation(fields: [trainId], references: [id])
+  stationId     Int
+  station       Station  @relation(fields: [stationId], references: [id])
+  sequence      Int
+  arrivalTime   String?
+  departureTime String?
+
+  @@unique([trainId, sequence])
+  @@unique([trainId, stationId])
+}
+
+// ---------------------------------------------
+// COACH
+// ---------------------------------------------
+model Coach {
+  id          Int    @id @default(autoincrement())
+  trainId     Int
+  train       Train  @relation(fields: [trainId], references: [id])
+  coachNumber String
+  classType   String
+
+  seats Seat[]
+
+  @@unique([trainId, coachNumber])
+}
+
+// ---------------------------------------------
+// SEAT
+// ---------------------------------------------
+model Seat {
+  id         Int    @id @default(autoincrement())
+  coachId    Int
+  coach      Coach  @relation(fields: [coachId], references: [id])
+  seatNumber String
+  seatType   String @default("SLEEPER")
+
+  bookingSeats BookingSeat[]
+
+  @@unique([coachId, seatNumber])
+}
+
+// ---------------------------------------------
+// BOOKING
+// ---------------------------------------------
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id                  Int           @id @default(autoincrement())
+  pnr                 String        @unique
+  userId              Int
+  user                User          @relation(fields: [userId], references: [id])
+  trainId             Int
+  train               Train         @relation(fields: [trainId], references: [id])
+  journeyDate         DateTime
+  boardingStationId   Int
+  boardingStation     Station       @relation("BoardingStation", fields: [boardingStationId], references: [id])
+  destinationStationId Int
+  destinationStation  Station       @relation("DestinationStation", fields: [destinationStationId], references: [id])
+  boardingSequence    Int
+  destinationSequence Int
+  status              BookingStatus @default(CONFIRMED)
+  createdAt           DateTime      @default(now())
+
+  bookingSeats BookingSeat[]
+  passengers   Passenger[]
+}
+
+// ---------------------------------------------
+// BOOKING SEAT (join table: which physical seat(s) a booking uses)
+// ---------------------------------------------
+model BookingSeat {
+  id        Int     @id @default(autoincrement())
+  bookingId Int
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  seatId    Int
+  seat      Seat    @relation(fields: [seatId], references: [id])
+
+  @@unique([bookingId, seatId])
+}
+
+// ---------------------------------------------
+// PASSENGER
+// ---------------------------------------------
+model Passenger {
+  id        Int     @id @default(autoincrement())
+  bookingId Int
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  name      String
+  age       Int
+  gender    String
+}
