@@ -1,27 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, User, Eye, EyeOff } from 'lucide-react';
 import SeatMap2D from '../components/SeatMap2D';
 import CoachViewer3D from '../components/CoachViewer3D';
 import { CLASSES } from '../coachData';
+import { getAvailability } from '../service/api';
 
 export default function SeatSelectionPage() {
   const { trainId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
-  
+
   const classCode = searchParams.get('class');
   const coachId = searchParams.get('coach');
   const fromCode = searchParams.get('from');
   const toCode = searchParams.get('to');
   const date = searchParams.get('date');
   const passengersCount = parseInt(searchParams.get('passengers') || '1', 10);
-  
+
   const selectedClassInfo = CLASSES.find(c => c.code === classCode);
 
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [viewMode, setViewMode] = useState('2d');
+  const [availabilityData, setAvailabilityData] = useState(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState('');
+
+  // Fetch availability data from backend
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!trainId || !fromCode || !toCode || !date) {
+        setLoadingAvailability(false);
+        return;
+      }
+
+      try {
+        setLoadingAvailability(true);
+        setAvailabilityError('');
+        const data = await getAvailability({
+          trainId: parseInt(trainId),
+          from: fromCode,
+          to: toCode,
+          date: date
+        });
+        setAvailabilityData(data);
+      } catch (error) {
+        console.error('Failed to fetch availability:', error);
+        setAvailabilityError('Unable to load seat availability. Using mock data.');
+        setAvailabilityData(null);
+      } finally {
+        setLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [trainId, fromCode, toCode, date]);
 
   // Use mock logic if no params provided
   if (!classCode || !coachId) {
@@ -54,13 +88,13 @@ export default function SeatSelectionPage() {
   return (
     <div className="pt-28 pb-24 min-h-[70vh] bg-stone-50">
       <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-        <Link 
-          to={`/trains/${trainId}/coach${location.search}`} 
+        <Link
+          to={`/trains/${trainId}/coach${location.search}`}
           className="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors font-bold text-sm mb-6 inline-flex"
         >
           <ChevronLeft className="w-5 h-5" /> Change Coach
         </Link>
-        
+
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-extrabold text-stone-900 mb-2">Select Seats</h2>
@@ -69,13 +103,13 @@ export default function SeatSelectionPage() {
             </p>
           </div>
           <div className="flex bg-stone-200/80 p-1.5 rounded-xl">
-            <button 
+            <button
               onClick={() => setViewMode('2d')}
               className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${viewMode === '2d' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
             >
               2D MAP
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('3d')}
               className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${viewMode === '3d' ? 'bg-rose-700 text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
             >
@@ -85,23 +119,25 @@ export default function SeatSelectionPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* Main Seat Map Area */}
           <div className="lg:w-3/4 flex flex-col h-[600px] rounded-3xl overflow-hidden border border-stone-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] bg-white relative">
             {viewMode === '2d' ? (
-              <SeatMap2D 
+              <SeatMap2D
                 classCode={classCode}
                 coachId={coachId}
                 selectedSeats={selectedSeats}
                 onToggleSeat={handleToggleSeat}
+                availabilityData={availabilityData}
               />
             ) : (
-              <CoachViewer3D 
+              <CoachViewer3D
                 classCode={classCode}
                 coachId={coachId}
                 selectedSeats={selectedSeats}
                 price={farePerSeat}
                 onToggleSeat={handleToggleSeat}
+                availabilityData={availabilityData}
               />
             )}
           </div>
@@ -112,7 +148,7 @@ export default function SeatSelectionPage() {
               <h3 className="text-lg font-bold text-stone-900 mb-6 flex items-center justify-between">
                 Booking Summary
               </h3>
-              
+
               <div className="space-y-4 mb-6 text-sm">
                 <div className="flex justify-between border-b border-stone-100 pb-3">
                   <span className="text-stone-500">Train</span>
@@ -152,17 +188,17 @@ export default function SeatSelectionPage() {
                 </div>
               )}
 
-              <button 
+              <button
                 onClick={handleContinue}
                 disabled={selectedSeats.length === 0}
                 className={`w-full rounded-xl py-4 font-bold text-lg tracking-wide transition-all flex items-center justify-center gap-2
-                  ${selectedSeats.length > 0 
-                    ? 'bg-rose-700 hover:bg-rose-800 text-white shadow-[0_4px_15px_rgba(225,29,72,0.2)] hover:shadow-[0_8px_25px_rgba(225,29,72,0.3)] hover:-translate-y-0.5' 
+                  ${selectedSeats.length > 0
+                    ? 'bg-rose-700 hover:bg-rose-800 text-white shadow-[0_4px_15px_rgba(225,29,72,0.2)] hover:shadow-[0_8px_25px_rgba(225,29,72,0.3)] hover:-translate-y-0.5'
                     : 'bg-stone-100 text-stone-400 cursor-not-allowed'}`}
               >
                 Continue <ChevronRight className="w-5 h-5" />
               </button>
-              
+
 
             </div>
           </div>

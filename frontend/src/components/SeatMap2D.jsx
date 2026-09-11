@@ -3,11 +3,26 @@ import { User, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generate2DLayout, getSeatAvailability } from '../coachData';
 
-export default function SeatMap2D({ classCode, coachId, selectedSeats, recommendedSeatId, onToggleSeat }) {
+export default function SeatMap2D({ classCode, coachId, selectedSeats, recommendedSeatId, onToggleSeat, availabilityData }) {
   const [preview, setPreview] = useState({ show: false, seat: null });
 
   // Generate the pure layout template (doesn't contain status)
   const layout = useMemo(() => generate2DLayout(classCode), [classCode]);
+
+  // Build a map of available seats from the API data
+  const seatStatusMap = useMemo(() => {
+    if (!availabilityData?.coaches) return {};
+
+    const map = {};
+    availabilityData.coaches.forEach(coach => {
+      if (coach.coachId === coachId || coach.coachNumber === coachId) {
+        coach.seats?.forEach(seat => {
+          map[seat.id] = seat.available ? 'available' : 'occupied';
+        });
+      }
+    });
+    return map;
+  }, [availabilityData, coachId]);
 
   const handleSingleClick = (e, seat, status) => {
     setPreview({ show: true, seat: { ...seat, status } });
@@ -20,9 +35,12 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
   };
 
   const Seat = ({ seat }) => {
-    // Determine live availability based on coach and seat
-    const status = getSeatAvailability(coachId, seat.id);
-    
+    // Check real availability data first, fall back to mock
+    let status = seatStatusMap[seat.id];
+    if (!status) {
+      status = getSeatAvailability(coachId, seat.id);
+    }
+
     const isAvail = status === 'available';
     const isRAC = status === 'RAC';
     const isOcc = status === 'occupied';
@@ -42,7 +60,7 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
     const isChair = seat.type.includes('Chair') || seat.type.includes('Bench');
 
     return (
-      <div 
+      <div
         className={`relative flex items-center justify-center text-[11px] font-bold rounded-md border transition-all duration-200 ${bgClass} 
           ${isChair ? 'w-10 h-10' : 'w-12 h-8'} select-none`}
         onClick={(e) => handleSingleClick(e, seat, status)}
@@ -56,7 +74,7 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
 
   return (
     <div className="w-full h-full flex flex-col relative bg-stone-950 p-8">
-      
+
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-6 bg-stone-900/95 border border-stone-800 rounded-xl p-4 mb-8 sticky top-0 z-20 backdrop-blur shadow-xl shadow-black/20">
         <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-stone-900 border border-stone-700"></div><span className="text-sm text-stone-300 font-medium">Available</span></div>
@@ -69,7 +87,7 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
       {/* Coach Layout Scroll View */}
       <div className="flex-1 overflow-auto custom-scrollbar flex justify-center pb-8">
         <div className="bg-stone-950 border-4 border-stone-800 rounded-3xl p-8 relative shadow-xl shadow-black/20 flex gap-10 items-center min-w-max">
-          
+
           {layout.map((unit, i) => {
             if (unit.type === 'bay') {
               return (
@@ -87,7 +105,7 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
                 </div>
               );
             }
-            
+
             if (unit.type === 'cabin') {
               return (
                 <div key={i} className="flex flex-col relative border border-stone-800 rounded-xl p-4 bg-stone-900">
@@ -121,14 +139,14 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
       {/* Preview Panel instead of Floating Tooltip */}
       <AnimatePresence>
         {preview.show && preview.seat && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.15 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 bg-stone-900 border border-stone-800 shadow-[0_10px_30px_rgba(0,0,0,0.5)] rounded-xl p-4 flex flex-col items-center min-w-[200px]"
           >
-            <button 
+            <button
               onClick={() => setPreview({ show: false, seat: null })}
               className="absolute top-2 right-2 text-stone-500 hover:text-white"
             >
@@ -136,10 +154,9 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
             </button>
             <div className="flex items-center gap-2 mb-2">
               <span className="font-black text-rose-400 text-2xl">{preview.seat.id}</span>
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
-                preview.seat.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
-                preview.seat.status === 'RAC' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-stone-800 text-stone-500'
-              }`}>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${preview.seat.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                  preview.seat.status === 'RAC' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-stone-800 text-stone-500'
+                }`}>
                 {preview.seat.status}
               </span>
             </div>

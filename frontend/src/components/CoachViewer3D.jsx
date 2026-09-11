@@ -41,7 +41,7 @@ const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat }) =>
   useEffect(() => {
     let isDragging = false;
     let prevPos = { x: 0, y: 0 };
-    
+
     const handleMouseDown = (e) => {
       isDragging = true;
       prevPos = { x: e.clientX, y: e.clientY };
@@ -58,7 +58,7 @@ const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat }) =>
       camera.rotation.x -= dy * 0.004;
       camera.rotation.x = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, camera.rotation.x));
     };
-    
+
     // Touch support
     const handleTouchStart = (e) => {
       if (e.touches.length === 1) {
@@ -113,17 +113,17 @@ const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat }) =>
       // Calculate view position near seat
       const seatZ = focusedSeat.position[2];
       const seatX = focusedSeat.position[0];
-      
+
       // Stand in aisle, look at seat
       const camX = seatX > 0 ? seatX - 1.2 : seatX + 1.2;
       targetPos.current.set(camX, 1.5, seatZ);
-      
+
       const lookAt = new THREE.Vector3(seatX, 1.0, seatZ);
       const tempCam = camera.clone();
       tempCam.position.copy(targetPos.current);
       tempCam.lookAt(lookAt);
       targetRot.current.copy(tempCam.rotation);
-      
+
       setIsFocusing(true);
     }
   }, [focusedSeat, camera]);
@@ -131,7 +131,7 @@ const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat }) =>
   useFrame((state, delta) => {
     if (isFocusing) {
       camera.position.lerp(targetPos.current, delta * 4);
-      
+
       // Slerp rotation
       const qStart = new THREE.Quaternion().setFromEuler(camera.rotation);
       const qEnd = new THREE.Quaternion().setFromEuler(targetRot.current);
@@ -185,7 +185,7 @@ const CoachShell = ({ length, classCode }) => {
         <planeGeometry args={[4.8, length + 4]} />
         <meshStandardMaterial color={floorColor} roughness={0.9} />
       </mesh>
-      
+
       {/* Aisle strip */}
       <mesh position={[0, 0.01, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[0.8, length + 4]} />
@@ -209,7 +209,7 @@ const CoachShell = ({ length, classCode }) => {
       </mesh>
 
       {/* End Walls & Doors */}
-      {[-length/2 - 2, length/2 + 2].map((z, idx) => (
+      {[-length / 2 - 2, length / 2 + 2].map((z, idx) => (
         <group key={`end-${idx}`} position={[0, 0, z]}>
           {/* Main End wall */}
           <mesh position={[0, 1.4, 0]} receiveShadow castShadow>
@@ -230,7 +230,7 @@ const CoachShell = ({ length, classCode }) => {
             <boxGeometry args={[0.8, 2.0, 0.02]} />
             <meshStandardMaterial color="#8b9dc3" metalness={0.4} roughness={0.6} />
           </mesh>
-          
+
           {/* Wash basin mirror (small reflective plane) */}
           <mesh position={[-1.5, 1.5, idx === 0 ? 0.07 : -0.07]}>
             <planeGeometry args={[0.4, 0.6]} />
@@ -241,7 +241,7 @@ const CoachShell = ({ length, classCode }) => {
             <boxGeometry args={[0.5, 0.1, 0.3]} />
             <meshStandardMaterial color="#e2e8f0" />
           </mesh>
-          
+
           {/* Info Labels for Toilet and Wash Basin */}
           <Html position={[-1.5, 1.5, idx === 0 ? 0.3 : -0.3]} center transform distanceFactor={3}>
             <div className="bg-stone-900/80 text-white px-2 py-1 rounded text-[8px] font-bold tracking-wider backdrop-blur pointer-events-none">
@@ -292,9 +292,9 @@ const CoachShell = ({ length, classCode }) => {
             <group position={[0, 2.7, z - 0.8]}>
               <mesh><cylinderGeometry args={[0.05, 0.05, 0.1]} /><meshStandardMaterial color="#27272a" /></mesh>
               <mesh position={[0, -0.05, 0]}><boxGeometry args={[0.5, 0.01, 0.05]} /><meshStandardMaterial color="#27272a" /></mesh>
-              <mesh position={[0, -0.05, 0]} rotation={[0, Math.PI/2, 0]}><boxGeometry args={[0.5, 0.01, 0.05]} /><meshStandardMaterial color="#27272a" /></mesh>
+              <mesh position={[0, -0.05, 0]} rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[0.5, 0.01, 0.05]} /><meshStandardMaterial color="#27272a" /></mesh>
             </group>
-            
+
             {/* Luggage Rack / Upper Berth Support (for day travel coaches) */}
             {!isSleeper && (
               <>
@@ -325,12 +325,12 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
   let padColor = '#1e3a8a'; // Deep blue cushions
   if (seat.type.includes('Exec')) padColor = '#7f1d1d';
   if (seat.type.includes('Bench')) padColor = '#334155';
-  
+
   let frameColor = '#94a3b8'; // Grey metal frames
 
   let activeColor = padColor;
   let emissive = '#000000';
-  
+
   if (selected) {
     activeColor = '#e11d48'; // Rose-600
     emissive = '#be123c';
@@ -341,7 +341,7 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
   }
 
   const isChair = seat.type.includes('Chair') || seat.type.includes('Bench');
-  
+
   const [hovered, setLocalHovered] = useState(false);
   const meshRef = useRef();
 
@@ -354,9 +354,9 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
   });
 
   return (
-    <group 
+    <group
       ref={meshRef}
-      position={seat.position} 
+      position={seat.position}
       rotation={seat.rotation}
       onClick={(e) => {
         e.stopPropagation();
@@ -383,18 +383,18 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
       </mesh>
 
       {/* Frame support below */}
-      <mesh position={[0, -seat.size[1]/2 - 0.05, 0]} castShadow>
-        <boxGeometry args={[seat.size[0]*0.9, 0.1, seat.size[2]*0.8]} />
+      <mesh position={[0, -seat.size[1] / 2 - 0.05, 0]} castShadow>
+        <boxGeometry args={[seat.size[0] * 0.9, 0.1, seat.size[2] * 0.8]} />
         <meshStandardMaterial color={frameColor} metalness={0.6} roughness={0.4} />
       </mesh>
 
       {/* Label embedded on the seat */}
-      <Text 
-        position={[0, seat.size[1]/2 + 0.01, 0]} 
-        rotation={[-Math.PI/2, 0, 0]}
-        fontSize={0.12} 
+      <Text
+        position={[0, seat.size[1] / 2 + 0.01, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.12}
         color={selected ? "white" : (isOcc ? "#a8a29e" : "white")}
-        anchorX="center" 
+        anchorX="center"
         anchorY="middle"
       >
         {seat.id}
@@ -402,17 +402,17 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
 
       {/* Backrest for Chairs */}
       {isChair && (
-        <group position={[0, 0.35, -seat.size[2]/2 + 0.1]}>
+        <group position={[0, 0.35, -seat.size[2] / 2 + 0.1]}>
           <mesh castShadow receiveShadow rotation={[-0.1, 0, 0]}>
             <boxGeometry args={[seat.size[0] * 0.9, 0.7, 0.1]} />
             <meshPhysicalMaterial color={activeColor} roughness={0.8} emissive={emissive} emissiveIntensity={0.2} />
           </mesh>
-          <Text 
-            position={[0, 0.2, 0.06]} 
+          <Text
+            position={[0, 0.2, 0.06]}
             rotation={[-0.1, 0, 0]}
-            fontSize={0.12} 
+            fontSize={0.12}
             color={selected ? "white" : (isOcc ? "#a8a29e" : "white")}
-            anchorX="center" 
+            anchorX="center"
             anchorY="middle"
           >
             {seat.id}
@@ -423,12 +423,12 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
       {/* Armrests for Exec Chairs */}
       {isChair && (seat.type === 'Exec Chair') && (
         <>
-          <mesh position={[-seat.size[0]/2, 0.25, 0]} castShadow>
-            <boxGeometry args={[0.06, 0.05, seat.size[2]*0.8]} />
+          <mesh position={[-seat.size[0] / 2, 0.25, 0]} castShadow>
+            <boxGeometry args={[0.06, 0.05, seat.size[2] * 0.8]} />
             <meshStandardMaterial color="#1e293b" roughness={0.8} />
           </mesh>
-          <mesh position={[seat.size[0]/2, 0.25, 0]} castShadow>
-            <boxGeometry args={[0.06, 0.05, seat.size[2]*0.8]} />
+          <mesh position={[seat.size[0] / 2, 0.25, 0]} castShadow>
+            <boxGeometry args={[0.06, 0.05, seat.size[2] * 0.8]} />
             <meshStandardMaterial color="#1e293b" roughness={0.8} />
           </mesh>
         </>
@@ -437,11 +437,11 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
       {/* Chains/Supports for Upper/Middle Berths */}
       {!isChair && (seat.type.includes('Middle') || seat.type.includes('Upper')) && (
         <>
-          <mesh position={[seat.size[0]/2 - 0.05, 0.5, seat.size[2]/2 - 0.05]} castShadow>
+          <mesh position={[seat.size[0] / 2 - 0.05, 0.5, seat.size[2] / 2 - 0.05]} castShadow>
             <cylinderGeometry args={[0.01, 0.01, 1]} />
             <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.3} />
           </mesh>
-          <mesh position={[-seat.size[0]/2 + 0.05, 0.5, seat.size[2]/2 - 0.05]} castShadow>
+          <mesh position={[-seat.size[0] / 2 + 0.05, 0.5, seat.size[2] / 2 - 0.05]} castShadow>
             <cylinderGeometry args={[0.01, 0.01, 1]} />
             <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.3} />
           </mesh>
@@ -453,75 +453,97 @@ const SeatMesh = ({ seat, status, selected, recommended, focused, coachId, price
 
 const Scene = ({ classCode, coachId, selectedSeats, recommendedSeatId, focusedSeatId, price, handleToggleSeat, setHoveredSeat, moveKeys, resetTrigger }) => {
   const { seats, coachLength } = useMemo(() => generate3DLayout(classCode), [classCode]);
-  
+
   // Boundary constraints for the camera
   const bounds = {
     minX: -0.7, maxX: 0.7, // Keep within the aisle mostly
-    minZ: -coachLength/2 - 1, maxZ: coachLength/2 + 1
+    minZ: -coachLength / 2 - 1, maxZ: coachLength / 2 + 1
   };
 
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 1.6, coachLength / 2 - 1]} fov={75} near={0.1} far={50} />
       <FirstPersonControls bounds={bounds} moveKeys={moveKeys} resetTrigger={resetTrigger} focusedSeat={seats.find(s => s.id === focusedSeatId)} />
-      
+
       <ambientLight intensity={0.5} color="#ffffff" />
       <directionalLight position={[10, 15, 5]} intensity={1.2} color="#fef08a" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0005} />
-      
+
       <CoachShell length={coachLength} classCode={classCode} />
-      
-      {seats.map(seat => (
-        <SeatMesh 
-          key={seat.id} 
-          seat={seat} 
-          status={getSeatAvailability(coachId, seat.id)}
-          selected={selectedSeats.includes(seat.id)}
-          recommended={seat.id === recommendedSeatId && !selectedSeats.includes(seat.id)}
-          focused={seat.id === focusedSeatId}
-          coachId={coachId}
-          price={price}
-          onToggle={handleToggleSeat}
-          setPreview={setHoveredSeat}
-        />
-      ))}
+
+      {seats.map(seat => {
+        // Check real availability data first, fall back to mock
+        let status = seatStatusMap[seat.id];
+        if (!status) {
+          status = getSeatAvailability(coachId, seat.id);
+        }
+        return (
+          <SeatMesh
+            key={seat.id}
+            seat={seat}
+            status={status}
+            selected={selectedSeats.includes(seat.id)}
+            recommended={seat.id === recommendedSeatId && !selectedSeats.includes(seat.id)}
+            focused={seat.id === focusedSeatId}
+            coachId={coachId}
+            price={price}
+            onToggle={handleToggleSeat}
+            setPreview={setHoveredSeat}
+          />
+        );
+      })}
     </>
   );
 };
 
-export default function CoachViewer3D({ classCode, coachId, selectedSeats, recommendedSeatId, price, onToggleSeat }) {
+export default function CoachViewer3D({ classCode, coachId, selectedSeats, recommendedSeatId, price, onToggleSeat, availabilityData }) {
   const [hoveredSeat, setHoveredSeat] = useState(null);
   const [moveKeys, setMoveKeys] = useState({ forward: false, backward: false, left: false, right: false });
   const [resetTrigger, setResetTrigger] = useState(0);
   const [focusedSeatId, setFocusedSeatId] = useState(null);
+
+  // Build a map of available seats from the API data
+  const seatStatusMap = useMemo(() => {
+    if (!availabilityData?.coaches) return {};
+
+    const map = {};
+    availabilityData.coaches.forEach(coach => {
+      if (coach.coachId === coachId || coach.coachNumber === coachId) {
+        coach.seats?.forEach(seat => {
+          map[seat.id] = seat.available ? 'available' : 'occupied';
+        });
+      }
+    });
+    return map;
+  }, [availabilityData, coachId]);
 
   // Helper for UI buttons
   const handleKey = (key, val) => () => setMoveKeys(prev => ({ ...prev, [key]: val }));
 
   return (
     <div className="w-full h-full relative bg-stone-950">
-      
+
       {/* On-Screen Controls */}
       <div className="absolute bottom-6 left-6 z-10 flex flex-col items-center gap-2">
-        <button 
+        <button
           onPointerDown={handleKey('forward', true)} onPointerUp={handleKey('forward', false)} onPointerLeave={handleKey('forward', false)}
           className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl border border-white/20 flex items-center justify-center text-white transition-colors"
         >
           <ArrowUp className="w-6 h-6" />
         </button>
         <div className="flex gap-2">
-          <button 
+          <button
             onPointerDown={handleKey('left', true)} onPointerUp={handleKey('left', false)} onPointerLeave={handleKey('left', false)}
             className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl border border-white/20 flex items-center justify-center text-white transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <button 
+          <button
             onPointerDown={handleKey('backward', true)} onPointerUp={handleKey('backward', false)} onPointerLeave={handleKey('backward', false)}
             className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl border border-white/20 flex items-center justify-center text-white transition-colors"
           >
             <ArrowDown className="w-6 h-6" />
           </button>
-          <button 
+          <button
             onPointerDown={handleKey('right', true)} onPointerUp={handleKey('right', false)} onPointerLeave={handleKey('right', false)}
             className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl border border-white/20 flex items-center justify-center text-white transition-colors"
           >
@@ -533,7 +555,7 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
 
       <div className="absolute bottom-6 right-6 z-10 flex gap-3">
         {selectedSeats.length > 0 && (
-          <button 
+          <button
             onClick={() => {
               setFocusedSeatId(selectedSeats[selectedSeats.length - 1]);
               setTimeout(() => setFocusedSeatId(null), 2000); // Unset after focus
@@ -543,14 +565,14 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
             <Focus className="w-4 h-4" /> View My Seat
           </button>
         )}
-        <button 
+        <button
           onClick={() => setResetTrigger(v => v + 1)}
           className="px-4 py-3 bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl border border-white/20 flex items-center gap-2 text-white font-bold text-sm transition-colors"
         >
           <RefreshCw className="w-4 h-4" /> Reset View
         </button>
       </div>
-      
+
       <div className="absolute top-6 left-6 pointer-events-none z-10 bg-stone-900/90 backdrop-blur border border-stone-800 p-3 rounded-lg flex items-center gap-4 shadow-xl shadow-black/20">
         <div className="text-xs font-semibold text-stone-300">
           <span className="text-white font-bold">Drag</span> to look around
@@ -562,8 +584,8 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
       </div>
 
       <Canvas shadows dpr={[1, 2]} performance={{ min: 0.5 }}>
-        <Scene 
-          classCode={classCode} 
+        <Scene
+          classCode={classCode}
           coachId={coachId}
           selectedSeats={selectedSeats}
           recommendedSeatId={recommendedSeatId}
@@ -578,11 +600,11 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
 
       {/* Floating Tooltip HTML Overlay */}
       {hoveredSeat && (
-        <div 
+        <div
           className="absolute z-20 bg-stone-900 border border-stone-800 shadow-[0_10px_30px_rgba(0,0,0,0.5)] rounded-xl p-4 flex flex-col items-center min-w-[200px] animate-in slide-in-from-top-4 fade-in"
           style={{ bottom: '2rem', left: '50%', transform: 'translateX(-50%)' }}
         >
-          <button 
+          <button
             onClick={() => setHoveredSeat(null)}
             className="absolute top-2 right-2 text-stone-500 hover:text-white"
           >
@@ -590,10 +612,9 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
           </button>
           <div className="flex items-center gap-2 mb-2">
             <span className="font-black text-rose-400 text-2xl">{hoveredSeat.id}</span>
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
-              hoveredSeat.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${hoveredSeat.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
               hoveredSeat.status === 'RAC' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-stone-800 text-stone-500'
-            }`}>
+              }`}>
               {hoveredSeat.status === 'occupied' ? 'Unavailable' : hoveredSeat.status}
             </span>
           </div>

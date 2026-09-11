@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ChevronLeft, MapPin, Calendar, Users, Search } from 'lucide-react';
 import TrainResults from '../components/TrainResults';
-import { MOCK_STATIONS } from '../components/BookingForm';
+import { getStations } from '../service/api';
 
 export default function SearchResultsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const [stations, setStations] = useState([]);
+  const [loadingStations, setLoadingStations] = useState(true);
 
   const fromCode = searchParams.get('from');
   const toCode = searchParams.get('to');
@@ -15,8 +17,41 @@ export default function SearchResultsPage() {
   const passengers = searchParams.get('passengers') || '1';
   const travelClass = searchParams.get('class') || 'Economy';
 
-  const fromStation = MOCK_STATIONS.find(s => s.code === fromCode);
-  const toStation = MOCK_STATIONS.find(s => s.code === toCode);
+  // Load stations from backend
+  useEffect(() => {
+    const loadStations = async () => {
+      try {
+        const data = await getStations();
+        setStations(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load stations:', error);
+        setStations([]);
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+
+    loadStations();
+  }, []);
+
+  // Find station by code
+  const getStationName = (code) => {
+    const station = stations.find(s => s.code === code);
+    return station ? station.name : code;
+  };
+
+  const fromLabel = fromCode ? `${getStationName(fromCode)} (${fromCode})` : 'Unknown';
+  const toLabel = toCode ? `${getStationName(toCode)} (${toCode})` : 'Unknown';
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const handleSelectTrain = (trainId) => {
+    navigate(`/trains/${trainId}${location.search}`);
+  };
 
   // If no valid search params, show empty state
   if (!fromCode || !toCode) {
@@ -38,19 +73,6 @@ export default function SearchResultsPage() {
       </div>
     );
   }
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  };
-
-  const fromLabel = fromStation ? `${fromStation.city} (${fromStation.code})` : fromCode;
-  const toLabel = toStation ? `${toStation.city} (${toStation.code})` : toCode;
-
-  const handleSelectTrain = (trainId) => {
-    navigate(`/trains/${trainId}${location.search}`);
-  };
 
   return (
     <div className="pt-28 pb-8">
@@ -94,6 +116,9 @@ export default function SearchResultsPage() {
 
       {/* Train Results */}
       <TrainResults
+        fromCode={fromCode}
+        toCode={toCode}
+        date={date}
         fromLabel={fromLabel}
         toLabel={toLabel}
         onSelectTrain={handleSelectTrain}
