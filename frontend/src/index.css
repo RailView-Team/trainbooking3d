@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  background-color: #faf8ff;
+  color: #131b2e;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: rgba(29, 78, 216, 0.16);
+  color: #131b2e;
+}
+
+button, input, select { font: inherit; }
+
+/* RailView utility palette: blue commitments, cool surfaces, low-noise depth. */
+.bg-rose-700, .bg-rose-800 { background-color: #1d4ed8 !important; }
+.text-rose-700, .text-rose-800 { color: #1d4ed8 !important; }
+.bg-rose-50 { background-color: #dbeafe !important; }
+.border-rose-100, .border-rose-200 { border-color: #bfdbfe !important; }
+.bg-stone-950 { background-color: #0f172a !important; }
+.bg-stone-900 { background-color: #1d4ed8 !important; }
+.text-stone-900 { color: #131b2e !important; }
