@@ -341,15 +341,15 @@ export default function SeatMap() {
                   <div className="border-t border-slate-800/60 pt-4 mt-4">
                     <div className="flex justify-between text-slate-400 font-medium mb-2">
                       <span>Base Fare ({selectedSeats.length}x)</span>
-                      <span className="text-white font-bold">${selectedSeats.length * 45}</span>
+                      <span className="text-white font-bold">₹{selectedSeats.length * 45}</span>
                     </div>
                     <div className="flex justify-between text-slate-400 font-medium mb-4">
                       <span>Taxes & Fees</span>
-                      <span className="text-white font-bold">${selectedSeats.length * 5}</span>
+                      <span className="text-white font-bold">₹{selectedSeats.length * 5}</span>
                     </div>
                     <div className="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-rose-500/30">
                       <span className="text-slate-300 font-bold uppercase tracking-wider text-xs">Total Amount</span>
-                      <span className="text-2xl font-black text-rose-500">${selectedSeats.length * 50}</span>
+                      <span className="text-2xl font-black text-rose-500">₹{selectedSeats.length * 50}</span>
                     </div>
                   </div>
 

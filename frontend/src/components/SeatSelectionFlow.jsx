@@ -152,7 +152,7 @@ export default function SeatSelectionFlow({ onCheckout }) {
                   <h4 className={`font-semibold ${selectedClassCode === cls.code ? 'text-white' : 'text-stone-200'}`}>{cls.name}</h4>
                 </div>
                 <div className={`font-bold text-xl ${selectedClassCode === cls.code ? 'text-rose-400' : 'text-white'}`}>
-                  ${cls.fare}
+                  ₹{cls.fare}
                 </div>
               </div>
               <div className="text-sm text-stone-500 relative z-10">{cls.desc}</div>
@@ -380,7 +380,7 @@ export default function SeatSelectionFlow({ onCheckout }) {
                     {!isMobileSummaryOpen && (
                       <div className="flex justify-between items-center w-full px-6 pb-2">
                         <div className="font-bold text-white">{selectedSeats.length} Seats</div>
-                        <div className="font-black text-rose-400">${selectedSeats.length * (selectedClass.fare + 15)}</div>
+                        <div className="font-black text-rose-400">₹{selectedSeats.length * (selectedClass.fare + 15)}</div>
                       </div>
                     )}
                   </div>
@@ -429,15 +429,15 @@ export default function SeatSelectionFlow({ onCheckout }) {
                         <div className="border-t border-stone-800 pt-6 mt-auto">
                           <div className="flex justify-between text-stone-500 font-medium text-sm mb-3">
                             <span>Base Fare ({selectedSeats.length}x)</span>
-                            <span className="text-white font-bold">${selectedSeats.length * selectedClass.fare}</span>
+                            <span className="text-white font-bold">₹{selectedSeats.length * selectedClass.fare}</span>
                           </div>
                           <div className="flex justify-between text-stone-500 font-medium text-sm mb-5">
                             <span>Taxes & Fees</span>
-                            <span className="text-white font-bold">${selectedSeats.length * 15}</span>
+                            <span className="text-white font-bold">₹{selectedSeats.length * 15}</span>
                           </div>
                           <div className="flex justify-between items-center bg-stone-950 p-4 rounded-xl border border-stone-800 mb-6">
                             <span className="text-stone-500 font-bold uppercase tracking-wider text-xs">Total</span>
-                            <span className="text-2xl font-black text-rose-400">${selectedSeats.length * (selectedClass.fare + 15)}</span>
+                            <span className="text-2xl font-black text-rose-400">₹{selectedSeats.length * (selectedClass.fare + 15)}</span>
                           </div>
 
                           <button 

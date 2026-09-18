@@ -98,7 +98,7 @@ export default function CoachSelection() {
                         <h4 className={`font-bold ${isSelected ? 'text-white' : 'text-slate-200'}`}>{cls.name}</h4>
                       </div>
                       <div className={`font-bold text-lg ${isSelected ? 'text-rose-400' : 'text-white'}`}>
-                        ${cls.fare}
+                        ₹{cls.fare}
                       </div>
                     </div>
                     
@@ -143,7 +143,7 @@ export default function CoachSelection() {
                   </div>
                   <div className="text-left md:text-right">
                     <div className="text-sm font-medium text-slate-500 uppercase tracking-widest">Base Fare</div>
-                    <div className="text-4xl font-black text-white mt-1">${selectedClass.fare}</div>
+                    <div className="text-4xl font-black text-white mt-1">₹{selectedClass.fare}</div>
                   </div>
                 </div>
 

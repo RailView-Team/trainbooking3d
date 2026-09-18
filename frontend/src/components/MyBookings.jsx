@@ -14,7 +14,7 @@ const MOCK_BOOKINGS = [
     seats: ['24', '25'],
     class: '3A',
     status: 'upcoming',
-    amount: '$165.00'
+    amount: '₹165.00'
   },
   {
     id: 'BKG-3121',
@@ -27,7 +27,7 @@ const MOCK_BOOKINGS = [
     seats: ['12'],
     class: '1A',
     status: 'completed',
-    amount: '$210.00'
+    amount: '₹210.00'
   },
   {
     id: 'BKG-1190',
@@ -40,7 +40,7 @@ const MOCK_BOOKINGS = [
     seats: ['4', '5', '6'],
     class: 'CC',
     status: 'cancelled',
-    amount: '$135.00'
+    amount: '₹135.00'
   }
 ];
 

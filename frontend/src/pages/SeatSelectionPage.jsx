@@ -212,7 +212,7 @@ export default function SeatSelectionPage() {
                 <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 mb-6">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Base Fare ({selectedSeats.length}x)</span>
-                    <span className="font-bold text-stone-900">${totalFare}</span>
+                    <span className="font-bold text-stone-900">₹{totalFare}</span>
                   </div>
                 </div>
               )}

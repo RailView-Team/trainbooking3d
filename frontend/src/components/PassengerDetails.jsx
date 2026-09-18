@@ -249,18 +249,18 @@ export default function PassengerDetails({ seats = [], coachId, classCode, fare,
                   {seats.map(id => (
                     <div key={id} className="flex justify-between text-sm font-medium">
                       <span className="text-stone-500">Seat {id} ({coachId})</span>
-                      <span className="text-stone-900">${fare}</span>
+                      <span className="text-stone-900">₹{fare}</span>
                     </div>
                   ))}
                   <div className="flex justify-between text-sm font-medium pt-3 border-t border-stone-100">
                     <span className="text-stone-500">Taxes & Fees</span>
-                    <span className="text-stone-900">${taxes}</span>
+                    <span className="text-stone-900">₹{taxes}</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center bg-stone-50 p-4 rounded-xl border border-stone-200 mb-6">
                   <span className="text-stone-500 font-bold uppercase tracking-wider text-xs">Total Amount</span>
-                  <span className="text-2xl font-black text-rose-800">${grandTotal}</span>
+                  <span className="text-2xl font-black text-rose-800">₹{grandTotal}</span>
                 </div>
 
                 <button 

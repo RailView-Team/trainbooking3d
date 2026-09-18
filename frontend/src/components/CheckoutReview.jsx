@@ -144,21 +144,21 @@ export default function CheckoutReview({ bookingData, passengerData, onBack, onC
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-stone-500">Base Fare ({seats.length} Tickets)</span>
-                  <span className="text-stone-900">${baseFare}</span>
+                  <span className="text-stone-900">₹{baseFare}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-stone-500">Taxes & GST</span>
-                  <span className="text-stone-900">${taxes}</span>
+                  <span className="text-stone-900">₹{taxes}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-stone-500">Convenience Fee</span>
-                  <span className="text-stone-900">${convenienceFee}</span>
+                  <span className="text-stone-900">₹{convenienceFee}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center bg-stone-50 p-4 rounded-xl border border-stone-200">
                 <span className="text-stone-500 font-bold uppercase tracking-wider text-xs">Total Payable</span>
-                <span className="text-3xl font-black text-rose-800">${grandTotal}</span>
+                <span className="text-3xl font-black text-rose-800">₹{grandTotal}</span>
               </div>
             </div>
 
@@ -225,7 +225,7 @@ export default function CheckoutReview({ bookingData, passengerData, onBack, onC
                 {isProcessing ? (
                   <div className="w-6 h-6 border-2 border-stone-200 border-t-white rounded-full animate-spin"></div>
                 ) : (
-                  <>Pay ${grandTotal} <Lock className="w-4 h-4 ml-1" /></>
+                  <>Pay ₹{grandTotal} <Lock className="w-4 h-4 ml-1" /></>
                 )}
               </button>
               

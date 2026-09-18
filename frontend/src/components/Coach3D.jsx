@@ -448,15 +448,15 @@ export default function Coach3D() {
               <div className="border-t border-slate-800/60 pt-6">
                 <div className="flex justify-between text-slate-400 font-medium text-sm mb-3">
                   <span>Base Fare ({selectedSeats.length}x)</span>
-                  <span className="text-white font-bold">${selectedSeats.length * 45}</span>
+                  <span className="text-white font-bold">₹{selectedSeats.length * 45}</span>
                 </div>
                 <div className="flex justify-between text-slate-400 font-medium text-sm mb-5">
                   <span>Taxes & Fees</span>
-                  <span className="text-white font-bold">${selectedSeats.length * 5}</span>
+                  <span className="text-white font-bold">₹{selectedSeats.length * 5}</span>
                 </div>
                 <div className="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-rose-500/30 shadow-[0_0_20px_rgba(225,29,72,0.05)]">
                   <span className="text-slate-300 font-bold uppercase tracking-wider text-xs">Total Amount</span>
-                  <span className="text-2xl font-black text-rose-500">${selectedSeats.length * 50}</span>
+                  <span className="text-2xl font-black text-rose-500">₹{selectedSeats.length * 50}</span>
                 </div>
 
                 <button className="w-full bg-rose-600 hover:bg-rose-500 text-white rounded-xl py-4 font-bold text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:-translate-y-0.5 mt-6 flex justify-center items-center gap-2">
