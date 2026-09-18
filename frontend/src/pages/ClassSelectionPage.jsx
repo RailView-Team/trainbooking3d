@@ -181,7 +181,7 @@ export default function ClassSelectionPage() {
                     <h4 className="font-bold text-xl text-stone-900">{cls.name}</h4>
                   </div>
                   <div className="font-black text-2xl text-stone-900">
-                    ${cls.fare}
+                    ₹{cls.fare}
                   </div>
                 </div>
 
