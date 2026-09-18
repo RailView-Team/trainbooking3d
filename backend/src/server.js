@@ -53,7 +53,10 @@ app.use(
                 ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map(value => value.trim()) : [])
             ];
 
-            if (!origin || allowedOrigins.includes(origin)) {
+            const isLocalDevelopmentOrigin = process.env.NODE_ENV !== "production"
+                && /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin || "");
+
+            if (!origin || allowedOrigins.includes(origin) || isLocalDevelopmentOrigin) {
                 return callback(null, true);
             }
 
