@@ -1,5 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import SearchResultsPage from './pages/SearchResultsPage'
@@ -15,21 +17,25 @@ import BookingsPage from './pages/BookingsPage'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/trains" element={<SearchResultsPage />} />
-        <Route path="/trains/:trainId" element={<TrainDetailsPage />} />
-        <Route path="/trains/:trainId/class" element={<ClassSelectionPage />} />
-        <Route path="/trains/:trainId/coach" element={<CoachSelectionPage />} />
-        <Route path="/trains/:trainId/seats" element={<SeatSelectionPage />} />
-        <Route path="/booking/passengers" element={<PassengerDetailsPage />} />
-        <Route path="/booking/review" element={<ReviewBookingPage />} />
-        <Route path="/booking/payment" element={<PaymentPage />} />
-        <Route path="/booking/confirmation" element={<ConfirmationPage />} />
-        <Route path="/bookings" element={<BookingsPage />} />
-      </Route>
-    </Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/trains" element={<SearchResultsPage />} />
+            <Route path="/trains/:trainId" element={<TrainDetailsPage />} />
+            <Route path="/trains/:trainId/class" element={<ClassSelectionPage />} />
+            <Route path="/trains/:trainId/coach" element={<CoachSelectionPage />} />
+            <Route path="/trains/:trainId/seats" element={<SeatSelectionPage />} />
+            <Route path="/booking/passengers" element={<PassengerDetailsPage />} />
+            <Route path="/booking/review" element={<ReviewBookingPage />} />
+            <Route path="/booking/payment" element={<PaymentPage />} />
+            <Route path="/booking/confirmation" element={<ConfirmationPage />} />
+            <Route path="/bookings" element={<BookingsPage />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

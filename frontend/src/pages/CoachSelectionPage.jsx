@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, TrainFront } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrainFront, Box, Map } from 'lucide-react';
 import { CLASSES } from '../coachData';
 import { getAvailability } from '../service/api';
 
@@ -21,6 +21,7 @@ export default function CoachSelectionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedCoach, setSelectedCoach] = useState(null);
+  const [preferredView, setPreferredView] = useState('3d');
 
   // Fetch availability data
   useEffect(() => {
@@ -110,7 +111,11 @@ export default function CoachSelectionPage() {
   const handleContinue = () => {
     if (selectedCoach) {
       searchParams.set('coach', selectedCoach);
-      searchParams.set('view', '3d');
+      if (preferredView === '3d') {
+        searchParams.set('view', '3d');
+      } else {
+        searchParams.delete('view');
+      }
       navigate(`/trains/${trainId}/seats?${searchParams.toString()}`);
     }
   };
@@ -174,20 +179,70 @@ export default function CoachSelectionPage() {
           )}
         </div>
 
-        {/* Selected Coach Details */}
+        {/* Selected Coach Details + View Mode Chooser */}
         {currentCoach && (
-          <div className="bg-white border border-stone-200/60 rounded-3xl p-8 shadow-[0_4px_20px_rgb(0,0,0,0.03)] flex flex-col lg:flex-row gap-8 justify-between items-center">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center flex-shrink-0">
-                <TrainFront className="w-10 h-10 text-rose-700" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-extrabold text-stone-900 mb-1">Coach {currentCoach.number}</h3>
-                <p className="text-stone-500 font-medium">{selectedClassInfo.name} • {currentCoach.availableCount} seats available</p>
+          <div className="bg-white border border-stone-200/60 rounded-3xl p-8 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
+            <div className="flex flex-col lg:flex-row gap-8 justify-between items-start lg:items-center mb-8">
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center flex-shrink-0">
+                  <TrainFront className="w-10 h-10 text-rose-700" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-extrabold text-stone-900 mb-1">Coach {currentCoach.number}</h3>
+                  <p className="text-stone-500 font-medium">{selectedClassInfo.name} • {currentCoach.availableCount} seats available</p>
+                </div>
               </div>
             </div>
 
-            <div className="w-full lg:w-auto flex flex-col items-end gap-4">
+            {/* ── View Mode Chooser ─────────────────────── */}
+            <div className="mb-8">
+              <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">How would you like to select seats?</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 3D Option */}
+                <button
+                  onClick={() => setPreferredView('3d')}
+                  className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                    preferredView === '3d'
+                      ? 'border-emerald-600 bg-emerald-50 shadow-[0_4px_15px_rgba(5,150,105,0.15)]'
+                      : 'border-stone-200 bg-white hover:border-emerald-300 hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${preferredView === '3d' ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-500'}`}>
+                      <Box className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className={`font-bold text-sm ${preferredView === '3d' ? 'text-emerald-700' : 'text-stone-900'}`}>3D Walkthrough View</div>
+                      <div className="text-xs text-stone-400">Immersive first-person experience</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1">Walk through the coach, inspect each seat up close, and select in a realistic 3D environment.</p>
+                </button>
+
+                {/* 2D Option */}
+                <button
+                  onClick={() => setPreferredView('2d')}
+                  className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                    preferredView === '2d'
+                      ? 'border-emerald-600 bg-emerald-50 shadow-[0_4px_15px_rgba(5,150,105,0.15)]'
+                      : 'border-stone-200 bg-white hover:border-emerald-300 hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${preferredView === '2d' ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-500'}`}>
+                      <Map className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className={`font-bold text-sm ${preferredView === '2d' ? 'text-emerald-700' : 'text-stone-900'}`}>2D Seat Map</div>
+                      <div className="text-xs text-stone-400">Fast overview • Low bandwidth</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1">Classic top-down seat map for quick selection. Works great on slow connections.</p>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
               <button
                 onClick={handleContinue}
                 disabled={!selectedCoach}

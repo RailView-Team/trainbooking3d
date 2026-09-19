@@ -6,7 +6,7 @@ import { generate2DLayout, getSeatAvailability } from '../coachData';
 export default function SeatMap2D({ classCode, coachId, selectedSeats, recommendedSeatId, onToggleSeat, availabilityData }) {
   const [preview, setPreview] = useState({ show: false, seat: null });
 
-  // Generate the pure layout template (doesn't contain status)
+  // Generate the pure layout template
   const layout = useMemo(() => generate2DLayout(classCode), [classCode]);
 
   // Build a map of available seats from the API data
@@ -18,6 +18,7 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
       if (String(coach.coachId) === String(coachId) || coach.coachNumber === coachId) {
         coach.seats?.forEach(seat => {
           map[seat.seatNumber] = { id: seat.id, status: seat.available ? 'available' : 'occupied' };
+          map[String(seat.id)] = { id: seat.id, status: seat.available ? 'available' : 'occupied' };
         });
       }
     });
@@ -28,15 +29,14 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
     setPreview({ show: true, seat: { ...seat, status } });
   };
 
-  const handleDoubleClick = (e, seat, status) => {
+  const handleDoubleClick = (e, seat, status, realSeatId) => {
     if (status === 'available' || status === 'RAC') {
-      onToggleSeat(seat.id);
+      onToggleSeat(realSeatId);
     }
   };
 
   const Seat = ({ seat }) => {
-    // Check real availability data first, fall back to mock
-    const apiSeat = seatStatusMap[seat.id];
+    const apiSeat = seatStatusMap[seat.id] || seatStatusMap[String(seat.id)];
     const status = apiSeat?.status || getSeatAvailability(coachId || '', seat.id);
     const seatId = apiSeat?.id ?? seat.id;
 
@@ -45,7 +45,6 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
     const isOcc = status === 'occupied';
     const isSelected = selectedSeats.includes(seatId);
     const isRecommended = seat.id === recommendedSeatId && !isSelected;
-
     const isPreviewed = preview.show && preview.seat?.id === seat.id;
 
     let bgClass = '';
@@ -63,9 +62,9 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
         className={`relative flex items-center justify-center text-[11px] font-bold rounded-md border transition-all duration-200 ${bgClass} 
           ${isChair ? 'w-10 h-10' : 'w-12 h-8'} select-none`}
         onClick={(e) => handleSingleClick(e, seat, status)}
-        onDoubleClick={(e) => handleDoubleClick(e, { ...seat, id: seatId }, status)}
+        onDoubleClick={(e) => handleDoubleClick(e, { ...seat, id: seatId }, status, seatId)}
       >
-        {apiSeat ? seat.id : seat.id}
+        {seat.id}
         {isOcc && <User className="absolute w-5 h-5 text-stone-300" strokeWidth={3} />}
       </div>
     );
@@ -135,7 +134,7 @@ export default function SeatMap2D({ classCode, coachId, selectedSeats, recommend
         </div>
       </div>
 
-      {/* Preview Panel instead of Floating Tooltip */}
+      {/* Preview Panel */}
       <AnimatePresence>
         {preview.show && preview.seat && (
           <motion.div

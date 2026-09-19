@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, User, Eye, EyeOff } from 'lucide-react';
 import SeatMap2D from '../components/SeatMap2D';
 import CoachViewer3D from '../components/CoachViewer3D';
 import ImmersiveCoachExperience from '../components/ImmersiveCoachExperience';
+import ViewModeToolbar from '../components/ViewModeToolbar';
 import { CLASSES } from '../coachData';
 import { getAvailability } from '../service/api';
 
@@ -27,6 +28,7 @@ export default function SeatSelectionPage() {
   const [availabilityData, setAvailabilityData] = useState(null);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
   const [availabilityError, setAvailabilityError] = useState('');
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   // Fetch availability data from backend
   useEffect(() => {
@@ -88,6 +90,20 @@ export default function SeatSelectionPage() {
     navigate(`/trains/${trainId}/coach?${searchParams.toString()}`);
   };
 
+  const switchTo2D = () => {
+    searchParams.delete('view');
+    navigate(`/trains/${trainId}/seats?${searchParams.toString()}`, { replace: true });
+    setViewMode('2d');
+  };
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+  };
+
+  const handleReenterCoach = () => {
+    setResetTrigger(v => v + 1);
+  };
+
   const farePerSeat = selectedClassInfo?.fare || 0;
   const totalFare = farePerSeat * selectedSeats.length;
 
@@ -110,6 +126,9 @@ export default function SeatSelectionPage() {
         onToggleSeat={handleToggleSeat}
         onContinue={handleContinue}
         onExit={exitImmersiveView}
+        onSwitchTo2D={switchTo2D}
+        onViewModeChange={handleViewModeChange}
+        onReenterCoach={handleReenterCoach}
       />
     );
   }
@@ -124,27 +143,20 @@ export default function SeatSelectionPage() {
           <ChevronLeft className="w-5 h-5" /> Change Coach
         </Link>
 
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-extrabold text-stone-900 mb-2">Select Seats</h2>
-            <p className="text-stone-500 font-medium">
-              Click to preview. Double-click to select or deselect.
-            </p>
-          </div>
-          <div className="flex bg-stone-200/80 p-1.5 rounded-xl">
-            <button
-              onClick={() => setViewMode('2d')}
-              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${viewMode === '2d' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              2D MAP
-            </button>
-            <button
-              onClick={() => setViewMode('3d')}
-              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${viewMode === '3d' ? 'bg-rose-700 text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              3D VIEW
-            </button>
-          </div>
+        <div className="mb-6">
+          <h2 className="text-3xl font-extrabold text-stone-900 mb-2">Select Seats</h2>
+          <p className="text-stone-500 font-medium">
+            Click to preview. Double-click to select or deselect.
+          </p>
+        </div>
+
+        {/* ── View Mode Toolbar ──────────────────────── */}
+        <div className="mb-6">
+          <ViewModeToolbar
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            onReenterCoach={viewMode === '3d' ? handleReenterCoach : undefined}
+          />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">

@@ -18,6 +18,9 @@ import authRoutes
 import bookingsRoutes
     from "./routes/bookings.routes.js";
 
+import chatRoutes
+    from "./routes/chat.routes.js";
+
 import { errorHandler }
     from "./middleware/errorHandler.js";
 
@@ -137,6 +140,12 @@ app.use(
 app.use(
     "/api/bookings",
     bookingsRoutes
+);
+
+
+app.use(
+    "/api/chat",
+    chatRoutes
 );
 
 

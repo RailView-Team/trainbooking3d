@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS booking_seats CASCADE;
 DROP TABLE IF EXISTS passengers CASCADE;
 DROP TABLE IF EXISTS bookings CASCADE;
+DROP TABLE IF EXISTS route_stops CASCADE;
 DROP TABLE IF EXISTS seats CASCADE;
 DROP TABLE IF EXISTS coaches CASCADE;
 DROP TABLE IF EXISTS train_trips CASCADE;
@@ -19,6 +20,7 @@ CREATE TABLE stations (
     name VARCHAR(150) NOT NULL,
     city VARCHAR(100) NOT NULL,
     code VARCHAR(10) UNIQUE NOT NULL,
+    state VARCHAR(100),
     latitude DECIMAL(10, 7),
     longitude DECIMAL(10, 7),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -33,6 +35,7 @@ CREATE TABLE trains (
     id SERIAL PRIMARY KEY,
     train_number VARCHAR(20) UNIQUE NOT NULL,
     name VARCHAR(150) NOT NULL,
+    train_type VARCHAR(50) DEFAULT 'SUPERFAST',
     status VARCHAR(30) DEFAULT 'ON_TIME',
     amenities JSONB DEFAULT '[]',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -63,9 +66,39 @@ CREATE TABLE train_trips (
 
     stops INTEGER DEFAULT 0,
 
-    journey_date DATE,
+    runs_on VARCHAR(50) DEFAULT 'DAILY',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- ============================================
+-- ROUTE STOPS (INTERMEDIATE STATIONS & SCHEDULE)
+-- ============================================
+
+CREATE TABLE route_stops (
+    id SERIAL PRIMARY KEY,
+
+    trip_id INTEGER NOT NULL
+        REFERENCES train_trips(id)
+        ON DELETE CASCADE,
+
+    station_id INTEGER NOT NULL
+        REFERENCES stations(id),
+
+    stop_sequence INTEGER NOT NULL,
+
+    arrival_time TIME,
+    departure_time TIME,
+
+    halt_minutes INTEGER DEFAULT 2,
+
+    distance_km INTEGER DEFAULT 0,
+
+    platform VARCHAR(10),
+
+    UNIQUE(trip_id, stop_sequence),
+    UNIQUE(trip_id, station_id)
 );
 
 
@@ -109,8 +142,6 @@ CREATE TABLE seats (
 
     berth_type VARCHAR(30),
 
-    status VARCHAR(20) DEFAULT 'AVAILABLE',
-
     UNIQUE(coach_id, seat_number)
 );
 
@@ -151,6 +182,14 @@ CREATE TABLE bookings (
     coach_id INTEGER NOT NULL
         REFERENCES coaches(id),
 
+    boarding_stop_id INTEGER
+        REFERENCES route_stops(id),
+
+    alighting_stop_id INTEGER
+        REFERENCES route_stops(id),
+
+    journey_date DATE NOT NULL,
+
     status VARCHAR(30) DEFAULT 'PENDING',
 
     payment_status VARCHAR(30) DEFAULT 'PENDING',
@@ -176,7 +215,8 @@ CREATE TABLE passengers (
         REFERENCES bookings(id)
         ON DELETE CASCADE,
 
-    seat_id VARCHAR(20) NOT NULL,
+    seat_id INTEGER NOT NULL
+        REFERENCES seats(id),
 
     name VARCHAR(100) NOT NULL,
 
@@ -239,6 +279,12 @@ ON train_trips(from_station_id, to_station_id);
 CREATE INDEX idx_train_trips_train
 ON train_trips(train_id);
 
+CREATE INDEX idx_route_stops_trip
+ON route_stops(trip_id, stop_sequence);
+
+CREATE INDEX idx_route_stops_station
+ON route_stops(station_id);
+
 CREATE INDEX idx_coaches_train
 ON coaches(train_id);
 
@@ -248,8 +294,11 @@ ON seats(coach_id);
 CREATE INDEX idx_bookings_user
 ON bookings(user_id);
 
+CREATE INDEX idx_bookings_trip_date
+ON bookings(trip_id, journey_date);
+
+CREATE INDEX idx_bookings_coach
+ON bookings(coach_id);
+
 CREATE INDEX idx_booking_seats_seat
 ON booking_seats(seat_id);
-
-CREATE INDEX idx_bookings_trip
-ON bookings(trip_id);

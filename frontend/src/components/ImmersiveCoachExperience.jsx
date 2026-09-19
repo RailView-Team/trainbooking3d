@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, ChevronDown, Mouse, Move3d, X } from 'lucide-react'
 import CoachViewer3D from './CoachViewer3D'
+import ViewModeToolbar from './ViewModeToolbar'
 
 export default function ImmersiveCoachExperience({
   trainId,
@@ -15,6 +16,9 @@ export default function ImmersiveCoachExperience({
   onToggleSeat,
   onContinue,
   onExit,
+  onSwitchTo2D,
+  onViewModeChange,
+  onReenterCoach,
 }) {
   const [previewSeat, setPreviewSeat] = useState(null)
   const className = useMemo(() => ({
@@ -26,6 +30,17 @@ export default function ImmersiveCoachExperience({
   const isSelectable = previewSeat?.status === 'available' || previewSeat?.status === 'RAC'
   const isSelected = previewSeat && selectedSeats.includes(previewSeat.id)
   const formatDate = date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''
+
+  const handleToolbarViewChange = (mode) => {
+    if (mode === '2d') {
+      if (onSwitchTo2D) onSwitchTo2D();
+      else if (onViewModeChange) onViewModeChange(mode);
+    }
+  }
+
+  const handleReenterCoach = () => {
+    if (onReenterCoach) onReenterCoach();
+  }
 
   return (
     <div className="fixed inset-0 z-[55] overflow-hidden bg-[#09111f] text-white">
@@ -40,31 +55,38 @@ export default function ImmersiveCoachExperience({
         immersive
       />
 
-      <header className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between bg-gradient-to-b from-[#07111f]/95 via-[#07111f]/55 to-transparent px-4 pb-16 pt-4 sm:px-7">
-        <div className="pointer-events-auto flex items-center gap-3">
-          <button onClick={onExit} className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-[#0b1828]/80 px-3 text-sm font-semibold text-white backdrop-blur hover:bg-[#13243a]">
-            <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Back</span>
-          </button>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300">AeroRail immersive coach</p>
-            <p className="mt-1 text-sm font-bold sm:text-base">Train {trainId} · {fromCode} → {toCode}</p>
-            <p className="text-xs text-white/55">{className} · Coach {coachLabel} · {formatDate}</p>
+      <header className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-3 bg-gradient-to-b from-[#07111f]/95 via-[#07111f]/55 to-transparent px-4 pb-16 pt-4 sm:px-7">
+        <div className="flex items-start justify-between">
+          <div className="pointer-events-auto flex items-center gap-3">
+            <button onClick={onExit} className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-[#0b1828]/80 px-3 text-sm font-semibold text-white backdrop-blur hover:bg-[#13243a]">
+              <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Back</span>
+            </button>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300">AeroRail immersive coach</p>
+              <p className="mt-1 text-sm font-bold sm:text-base">Train {trainId} · {fromCode} → {toCode}</p>
+              <p className="text-xs text-white/55">{className} · Coach {coachLabel} · {formatDate}</p>
+            </div>
           </div>
+          <button onClick={onExit} aria-label="Exit 3D view" className="pointer-events-auto rounded-full border border-white/15 bg-[#0b1828]/80 p-2 text-white/70 backdrop-blur hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <button onClick={onExit} aria-label="Exit 3D view" className="pointer-events-auto rounded-full border border-white/15 bg-[#0b1828]/80 p-2 text-white/70 backdrop-blur hover:text-white">
-          <X className="h-5 w-5" />
-        </button>
+
+        {/* ── View Mode Toolbar (dark variant for immersive) ── */}
+        <div className="pointer-events-auto">
+          <ViewModeToolbar
+            viewMode="3d"
+            onViewModeChange={handleToolbarViewChange}
+            onReenterCoach={handleReenterCoach}
+            variant="dark"
+          />
+        </div>
       </header>
 
       <div className="pointer-events-none absolute bottom-5 left-4 flex max-w-[calc(100%-2rem)] flex-wrap items-end gap-3 sm:left-7">
         <div className="pointer-events-auto rounded-2xl border border-white/10 bg-[#0b1828]/85 px-4 py-3 text-xs text-white/70 shadow-2xl backdrop-blur-md">
           <div className="mb-2 flex items-center gap-2 font-bold text-white"><Move3d className="h-4 w-4 text-sky-300" /> Walk through the coach</div>
           <div className="flex flex-wrap gap-x-4 gap-y-1"><span><b className="text-white">WASD</b> move</span><span><Mouse className="mr-1 inline h-3 w-3" />drag to look</span></div>
-        </div>
-        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0b1828]/85 px-4 py-3 text-[11px] font-semibold text-white/70 shadow-2xl backdrop-blur-md">
-          <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />Available</span>
-          <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-400" />RAC</span>
-          <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-slate-500" />Booked</span>
         </div>
       </div>
 
