@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: aerorail-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aerorail-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+
+databases:
+  - name: aerorail-db
+    databaseName: aerorail
+    user: aerorail
+    plan: free
