@@ -8,7 +8,7 @@ function TrainCard({ train, onSelectTrain }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white border border-stone-200/60 transition-all duration-300 rounded-[2rem] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] hover:border-rose-700/30"
+      className="bg-white border border-stone-200/60 transition-all duration-300 rounded-[2rem] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] hover:border-blue-600/30"
     >
       {/* Main Card */}
       <div className="p-6 flex flex-col md:flex-row md:items-center gap-6">
@@ -23,9 +23,9 @@ function TrainCard({ train, onSelectTrain }) {
             <div className="text-xs font-bold text-stone-400 mb-1">{train.duration}</div>
             <div className="relative w-24 md:w-32 h-px bg-stone-200 flex items-center justify-center">
               <div className="w-1.5 h-1.5 rounded-full bg-stone-300 absolute left-0"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-700 absolute right-0"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 absolute right-0"></div>
             </div>
-            <div className="text-[10px] font-semibold text-rose-700 uppercase tracking-widest mt-1.5">
+            <div className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mt-1.5">
               Direct
             </div>
           </div>
@@ -48,7 +48,7 @@ function TrainCard({ train, onSelectTrain }) {
 
           <button
             onClick={() => onSelectTrain(train.id)}
-            className="bg-rose-700 hover:bg-rose-800 text-white rounded-xl px-6 py-3 font-bold text-sm transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-3 font-bold text-sm transition-all shadow-md shadow-blue-600/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
           >
             Select
           </button>

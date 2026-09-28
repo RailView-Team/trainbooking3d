@@ -17,33 +17,33 @@ REGISTER
 router.post("/register", async (req, res, next) => {
 
     try {
-
-        const {
+        let {
             name,
             email,
             password
         } = req.body;
 
-
         if (!name || !email || !password) {
-
             return res.status(400).json({
-                message:
-                    "name, email and password are required"
+                message: "name, email and password are required"
             });
-
         }
 
+        name = String(name).trim();
+        email = String(email).trim().toLowerCase();
+        password = String(password);
+
+        if (name.length < 2) {
+            return res.status(400).json({
+                message: "Name must contain at least 2 characters"
+            });
+        }
 
         if (password.length < 6) {
-
             return res.status(400).json({
-                message:
-                    "Password must contain at least 6 characters"
+                message: "Password must contain at least 6 characters"
             });
-
         }
-
 
         const existingUser =
             await pool.query(
@@ -52,7 +52,7 @@ router.post("/register", async (req, res, next) => {
                 FROM users
                 WHERE email = $1
                 `,
-                [email.toLowerCase()]
+                [email]
             );
 
 
@@ -130,22 +130,19 @@ LOGIN
 router.post("/login", async (req, res, next) => {
 
     try {
-
-        const {
+        let {
             email,
             password
         } = req.body;
 
-
         if (!email || !password) {
-
             return res.status(400).json({
-                message:
-                    "email and password are required"
+                message: "email and password are required"
             });
-
         }
 
+        email = String(email).trim().toLowerCase();
+        password = String(password);
 
         const result =
             await pool.query(
@@ -158,7 +155,7 @@ router.post("/login", async (req, res, next) => {
                 FROM users
                 WHERE email = $1
                 `,
-                [email.toLowerCase()]
+                [email]
             );
 
 

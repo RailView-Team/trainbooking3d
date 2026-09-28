@@ -35,7 +35,7 @@ export default function TrainDetailsPage() {
   if (loading) {
     return (
       <div className="pt-36 pb-24 min-h-[70vh] flex flex-col items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-rose-700 mb-3" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
         <p className="text-stone-500 font-semibold text-sm">Loading train schedule & details...</p>
       </div>
     );
@@ -55,12 +55,12 @@ export default function TrainDetailsPage() {
         <div className="bg-white border border-stone-200/60 rounded-[2rem] p-8 lg:p-10 shadow-[0_4px_20px_rgb(0,0,0,0.03)] mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-stone-100">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center flex-shrink-0">
-                <TrainFront className="w-8 h-8 text-rose-700" />
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                <TrainFront className="w-8 h-8 text-blue-600" />
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="bg-rose-700 text-white font-mono text-xs font-black px-2.5 py-1 rounded">
+                  <span className="bg-blue-600 text-white font-mono text-xs font-black px-2.5 py-1 rounded">
                     #{train?.train_number || trainId}
                   </span>
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -76,7 +76,7 @@ export default function TrainDetailsPage() {
 
             <Link
               to={`/trains/${trainId}/class${location.search}`}
-              className="bg-rose-700 hover:bg-rose-800 text-white rounded-xl px-8 py-3.5 font-bold text-sm transition-all shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-2 self-start md:self-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-3.5 font-bold text-sm transition-all shadow-md shadow-blue-600/20 hover:-translate-y-0.5 flex items-center justify-center gap-2 self-start md:self-auto"
             >
               Select Class & Seats <ArrowRight className="w-4 h-4" />
             </Link>
@@ -164,7 +164,7 @@ export default function TrainDetailsPage() {
           <div className="mt-8 pt-6 border-t border-stone-100 flex justify-end">
             <Link
               to={`/trains/${trainId}/class${location.search}`}
-              className="bg-rose-700 hover:bg-rose-800 text-white rounded-xl px-8 py-3.5 font-bold text-sm transition-all shadow-md flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-3.5 font-bold text-sm transition-all shadow-md shadow-blue-600/20 flex items-center gap-2"
             >
               Continue to Seat Selection <ArrowRight className="w-4 h-4" />
             </Link>

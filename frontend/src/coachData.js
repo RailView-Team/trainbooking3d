@@ -147,7 +147,24 @@ export function generate3DLayout(classCode) {
     });
   };
 
-  if (classCode === '3A' || classCode === 'SL') {
+  if (classCode === '3A') {
+    coachLength = 23.3;
+    const bayCenters = [-5.11, -1.70, 1.72, 5.13];
+    bayCenters.forEach((z) => {
+      // Main Compartment (Right side of aisle in coach.glb, x = 1.02m)
+      // Side A (facing +Z, z - 1.20m)
+      addSeat('Lower Berth',  'Window', [1.02, 0.38, z - 1.20], [0, 0, 0], [1.65, 0.12, 0.72]);
+      addSeat('Middle Berth', 'Middle', [1.02, 1.25, z - 1.20], [0, 0, 0], [1.65, 0.10, 0.72]);
+      addSeat('Upper Berth',  'Aisle',  [1.02, 2.05, z - 1.20], [0, 0, 0], [1.65, 0.10, 0.72]);
+      // Side B (facing -Z, z + 1.20m)
+      addSeat('Lower Berth',  'Window', [1.02, 0.38, z + 1.20], [0, 0, 0], [1.65, 0.12, 0.72]);
+      addSeat('Middle Berth', 'Middle', [1.02, 1.25, z + 1.20], [0, 0, 0], [1.65, 0.10, 0.72]);
+      addSeat('Upper Berth',  'Aisle',  [1.02, 2.05, z + 1.20], [0, 0, 0], [1.65, 0.10, 0.72]);
+      // Side Berths (Left side of aisle in coach.glb, x = -1.48m)
+      addSeat('Side Lower',   'Window', [-1.48, 0.38, z],        [0, 0, 0], [0.72, 0.12, 1.80]);
+      addSeat('Side Upper',   'Window', [-1.48, 2.00, z],        [0, 0, 0], [0.72, 0.10, 1.80]);
+    });
+  } else if (classCode === 'SL') {
     coachLength = 9 * 4 + 2;
     for (let i = 0; i < 9; i++) {
       const z = (i * 4) - (coachLength / 2) + 2;

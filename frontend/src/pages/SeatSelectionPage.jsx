@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, User, Eye, EyeOff } from 'lucide-react';
 import SeatMap2D from '../components/SeatMap2D';
@@ -29,6 +29,17 @@ export default function SeatSelectionPage() {
   const [loadingAvailability, setLoadingAvailability] = useState(true);
   const [availabilityError, setAvailabilityError] = useState('');
   const [resetTrigger, setResetTrigger] = useState(0);
+
+  const seatNumberMap = useMemo(() => {
+    const map = {};
+    availabilityData?.coaches?.forEach(coach => {
+      coach.seats?.forEach(s => {
+        map[s.id] = s.seatNumber;
+        map[String(s.id)] = s.seatNumber;
+      });
+    });
+    return map;
+  }, [availabilityData]);
 
   // Fetch availability data from backend
   useEffect(() => {
@@ -65,7 +76,7 @@ export default function SeatSelectionPage() {
     return (
       <div className="pt-32 pb-24 text-center">
         <h2 className="text-2xl font-bold mb-4">Missing selection</h2>
-        <Link to={`/trains/${trainId}${location.search}`} className="text-rose-600 font-bold hover:underline">Start over from Details</Link>
+        <Link to={`/trains/${trainId}${location.search}`} className="text-blue-600 font-bold hover:underline">Start over from Details</Link>
       </div>
     );
   }
@@ -80,7 +91,10 @@ export default function SeatSelectionPage() {
 
   const handleContinue = () => {
     if (selectedSeats.length > 0) {
+      searchParams.set('trainId', String(trainId));
       searchParams.set('seats', selectedSeats.join(','));
+      const seatNumbers = selectedSeats.map(id => seatNumberMap[id] || id);
+      searchParams.set('seatNumbers', seatNumbers.join(','));
       navigate(`/booking/passengers?${searchParams.toString()}`);
     }
   };
@@ -214,7 +228,7 @@ export default function SeatSelectionPage() {
                 <div className="flex justify-between pb-3">
                   <span className="text-stone-500">Seats</span>
                   <span className="font-bold text-rose-700 flex flex-col items-end gap-1">
-                    <span>{selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</span>
+                    <span>{selectedSeats.length > 0 ? selectedSeats.map(id => seatNumberMap[id] || id).join(', ') : 'None'}</span>
                     <span className="text-xs text-stone-400">({selectedSeats.length} seats selected)</span>
                   </span>
                 </div>
@@ -234,7 +248,7 @@ export default function SeatSelectionPage() {
                 disabled={selectedSeats.length === 0}
                 className={`w-full rounded-xl py-4 font-bold text-lg tracking-wide transition-all flex items-center justify-center gap-2
                   ${selectedSeats.length > 0
-                    ? 'bg-rose-700 hover:bg-rose-800 text-white shadow-[0_4px_15px_rgba(225,29,72,0.2)] hover:shadow-[0_8px_25px_rgba(225,29,72,0.3)] hover:-translate-y-0.5'
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/25 hover:-translate-y-0.5'
                     : 'bg-stone-100 text-stone-400 cursor-not-allowed'}`}
               >
                 Continue <ChevronRight className="w-5 h-5" />
