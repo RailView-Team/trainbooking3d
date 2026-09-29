@@ -119,8 +119,8 @@ export default function ReviewBookingPage() {
   }, [passengers]);
 
   // Contact Information
-  const [contactEmail, setContactEmail] = useState(user?.email || 'sovomajee@gmail.com');
-  const [contactPhone, setContactPhone] = useState(user?.phone || '9339789221');
+  const [contactEmail, setContactEmail] = useState(user?.email || '');
+  const [contactPhone, setContactPhone] = useState(user?.phone || '');
 
   // Metadata
   const [trainInfo, setTrainInfo] = useState(null);
@@ -133,8 +133,8 @@ export default function ReviewBookingPage() {
   const [errorType, setErrorType] = useState(''); // 'DATA_MISSING' | 'SEAT_UNAVAILABLE' | 'INIT_FAILED'
 
   useEffect(() => {
-    if (user?.email && contactEmail === 'sovomajee@gmail.com') setContactEmail(user.email);
-    if (user?.phone && contactPhone === '9339789221') setContactPhone(user.phone);
+    if (user?.email && !contactEmail) setContactEmail(user.email);
+    if (user?.phone && !contactPhone) setContactPhone(user.phone);
   }, [user]);
 
   // Fetch train, stations, and coach info
