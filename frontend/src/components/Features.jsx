@@ -1,57 +1,75 @@
 import React from 'react';
-import { Eye, Sparkles, Smartphone, ShieldCheck } from 'lucide-react';
+import { ShieldCheck, TrainFront, Zap, Headphones } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const features = [
   {
-    icon: <Eye className="w-8 h-8 text-rose-700" />,
-    title: 'See Before You Book',
-    description: 'Explore your exact seat in full 3D. Check window alignment, legroom, and proximity to doors before confirming your reservation.'
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-600" />,
+    iconBg: 'bg-emerald-50 border-emerald-100',
+    title: '100% Secure',
+    description: 'Safe and reliable booking process'
   },
   {
-    icon: <Sparkles className="w-8 h-8 text-rose-700" />,
-    title: 'Smart Recommendations',
-    description: 'Tell us your preferences—window, aisle, quiet zone, or family seating—and our algorithm will highlight the best available seats.'
+    icon: <TrainFront className="w-5 h-5 text-purple-600" />,
+    iconBg: 'bg-purple-50 border-purple-100',
+    title: 'Real-time Availability',
+    description: 'Check seat availability instantly'
   },
   {
-    icon: <Smartphone className="w-8 h-8 text-rose-700" />,
-    title: 'Instant Mobile Ticketing',
-    description: 'Skip the line. Your digital ticket is instantly available on your device, complete with live journey tracking and platform updates.'
+    icon: <Zap className="w-5 h-5 text-amber-600" />,
+    iconBg: 'bg-amber-50 border-amber-100',
+    title: 'Easy & Fast',
+    description: 'Book in just a few simple steps'
   },
   {
-    icon: <ShieldCheck className="w-8 h-8 text-rose-700" />,
-    title: 'Secure & Flexible',
-    description: 'Enterprise-grade payment security. Change or cancel your trip with just a few taps using our seamless self-service portal.'
+    icon: <Headphones className="w-5 h-5 text-blue-600" />,
+    iconBg: 'bg-blue-50 border-blue-100',
+    title: '24/7 Support',
+    description: "We're here to help, anytime"
   }
 ];
 
 export default function Features() {
   return (
-    <section className="bg-[#faf8ff] py-16 border-t border-[#e2e8f0] relative z-10">
+    <section className="bg-white py-14 border-t border-stone-100 relative z-10">
       <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-        <div className="text-center max-w-2xl mx-auto mb-20">
-          <h2 className="text-2xl md:text-3xl font-bold text-stone-900 mb-4 tracking-tight">Essential railway services</h2>
-          <p className="text-sm text-stone-500 leading-relaxed">Clear tools for searching, selecting, and managing every journey.</p>
+        
+        {/* Section Heading */}
+        <div className="mb-10">
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-stone-400 block mb-1">
+            WHY CHOOSE RAILVISTA?
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+            A smarter way to book your journey
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* 4 Feature Items in a Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f, i) => (
-            <motion.div 
+            <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="bg-white p-6 lg:p-7 rounded-2xl border border-[#c4c5d7] shadow-none hover:border-[#93c5fd] transition-all duration-300 group"
+              transition={{ delay: i * 0.08, duration: 0.4 }}
+              className="flex items-start gap-3.5 p-4 rounded-2xl bg-white hover:bg-stone-50/60 transition-colors"
             >
-              <div className="w-12 h-12 rounded-lg bg-[#e2e7ff] border border-[#dbe2fd] flex items-center justify-center mb-6 group-hover:bg-[#dbeafe] transition-all duration-300">
+              <div className={`w-11 h-11 rounded-full border ${f.iconBg} flex items-center justify-center flex-shrink-0 shadow-xs`}>
                 {f.icon}
               </div>
-              <h3 className="text-lg font-bold text-stone-900 mb-3">{f.title}</h3>
-              <p className="text-sm text-stone-500 leading-relaxed">{f.description}</p>
+              <div>
+                <h3 className="text-sm font-extrabold text-stone-900 leading-tight mb-1">
+                  {f.title}
+                </h3>
+                <p className="text-xs text-stone-500 font-medium leading-relaxed">
+                  {f.description}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>
+
       </div>
     </section>
   );

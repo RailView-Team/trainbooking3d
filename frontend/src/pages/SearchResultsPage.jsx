@@ -15,7 +15,7 @@ export default function SearchResultsPage() {
   const toCode = searchParams.get('to');
   const date = searchParams.get('date');
   const passengers = searchParams.get('passengers') || '1';
-  const travelClass = searchParams.get('class') || 'Economy';
+  const travelClass = searchParams.get('class') || 'All Classes';
 
   // Load stations from backend
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function SearchResultsPage() {
         </p>
         <Link
           to="/"
-          className="bg-rose-700 hover:bg-rose-800 text-white rounded-xl px-8 py-3.5 font-bold transition-all shadow-lg"
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-3.5 font-bold transition-all shadow-md shadow-blue-600/20"
         >
           Go to Search
         </Link>
@@ -89,24 +89,24 @@ export default function SearchResultsPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-700" />
+                <MapPin className="w-5 h-5 text-blue-600" />
                 <span className="font-bold text-stone-900 text-lg">{fromLabel}</span>
               </div>
               <div className="text-stone-400 font-bold">→</div>
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-700" />
+                <MapPin className="w-5 h-5 text-blue-600" />
                 <span className="font-bold text-stone-900 text-lg">{toLabel}</span>
               </div>
             </div>
             <div className="flex items-center gap-4 flex-wrap">
               {date && (
                 <div className="flex items-center gap-1.5 bg-stone-50 px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-700">
-                  <Calendar className="w-4 h-4 text-rose-700" />
+                  <Calendar className="w-4 h-4 text-blue-600" />
                   {formatDate(date)}
                 </div>
               )}
               <div className="flex items-center gap-1.5 bg-stone-50 px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-700">
-                <Users className="w-4 h-4 text-rose-700" />
+                <Users className="w-4 h-4 text-blue-600" />
                 {passengers} {parseInt(passengers) === 1 ? 'Traveler' : 'Travelers'} • {travelClass}
               </div>
             </div>

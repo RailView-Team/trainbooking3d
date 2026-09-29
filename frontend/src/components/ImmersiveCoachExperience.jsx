@@ -62,7 +62,7 @@ export default function ImmersiveCoachExperience({
               <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Back</span>
             </button>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300">AeroRail immersive coach</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300">RailVista immersive coach</p>
               <p className="mt-1 text-sm font-bold sm:text-base">Train {trainId} · {fromCode} → {toCode}</p>
               <p className="text-xs text-white/55">{className} · Coach {coachLabel} · {formatDate}</p>
             </div>
@@ -94,7 +94,7 @@ export default function ImmersiveCoachExperience({
         {previewSeat ? (
           <>
             <div className="flex items-start justify-between">
-              <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300">Seat information</p><h2 className="mt-1 text-2xl font-black">Seat {previewSeat.id}</h2></div>
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300">Seat information</p><h2 className="mt-1 text-2xl font-black">Seat {previewSeat.seatNumber || previewSeat.id}</h2></div>
               <button onClick={() => setPreviewSeat(null)} aria-label="Close seat details" className="text-white/45 hover:text-white"><X className="h-4 w-4" /></button>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 border-y border-white/10 py-4 text-sm">

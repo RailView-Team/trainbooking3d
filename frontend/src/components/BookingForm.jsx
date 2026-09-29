@@ -1,25 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Search, ArrowRightLeft, Clock, TrendingUp, Check, Loader2, Calendar, Users, ChevronDown } from 'lucide-react';
+import { MapPin, Search, ArrowRightLeft, Calendar, Users, ChevronDown, Check, Loader2, ArrowRight } from 'lucide-react';
 import { getStations } from '../service/api';
 
-export const MOCK_STATIONS = [
-  { code: 'KOL', city: 'Kolkata', name: 'Sealdh Station' },
-  { code: 'BOM', city: 'Mumbai', name: 'Central Station' },
-  { code: 'DEL', city: 'Delhi', name: 'New Delhi Station' },
-  { code: 'BAN', city: 'Bangalore', name: 'Banglore Station' },
-  { code: 'HYD', city: 'Hyderabad', name: 'King Koil Station' },
-  { code: 'CHE', city: 'Chennai', name: 'Madras Station' },
+export const POPULAR_STATIONS = [
+  { code: 'HWH', city: 'Kolkata', name: 'Howrah Junction' },
+  { code: 'NDLS', city: 'New Delhi', name: 'New Delhi' },
+  { code: 'MMCT', city: 'Mumbai', name: 'Mumbai Central' },
+  { code: 'BSB', city: 'Varanasi', name: 'Varanasi Junction' },
+  { code: 'RNC', city: 'Ranchi', name: 'Ranchi Junction' },
+  { code: 'ADI', city: 'Ahmedabad', name: 'Ahmedabad Junction' },
+  { code: 'MAS', city: 'Chennai', name: 'Chennai Central' },
+  { code: 'SBC', city: 'Bengaluru', name: 'KSR Bengaluru City' },
+  { code: 'HYB', city: 'Hyderabad', name: 'Hyderabad Deccan' },
+  { code: 'SDAH', city: 'Kolkata', name: 'Sealdah' },
 ];
 
-const RECENT_ROUTES = [
-  { from: 'KOL', to: 'BOM', fromCity: 'Kolkata', toCity: 'Mumbai' },
-];
-
-const POPULAR_ROUTES = [
-  { from: 'KOL', to: 'DEL', fromCity: 'Kolkata', toCity: 'Delhi' },
-  { from: 'DEL', to: 'BOM', fromCity: 'Delhi', toCity: 'Mumbai' },
-];
+export const MOCK_STATIONS = POPULAR_STATIONS;
 
 const getLocalDate = () => {
   const today = new Date();
@@ -29,17 +26,14 @@ const getLocalDate = () => {
 
 export default function BookingForm() {
   const navigate = useNavigate();
-  const [from, setFrom] = useState(null);
-  const [to, setTo] = useState(null);
-  const [date, setDate] = useState(() => {
-    const today = new Date();
-    return getLocalDate();
-  });
+  const [from, setFrom] = useState(POPULAR_STATIONS[0]); // Default Howrah
+  const [to, setTo] = useState(POPULAR_STATIONS[1]);     // Default New Delhi
+  const [date, setDate] = useState(() => getLocalDate());
   const [passengers, setPassengers] = useState(1);
-  const [travelClass, setTravelClass] = useState('Economy');
-  const [stations, setStations] = useState([]);
-  const [stationsLoading, setStationsLoading] = useState(true);
-
+  const [travelClass, setTravelClass] = useState('All Classes');
+  
+  const [stations, setStations] = useState(POPULAR_STATIONS);
+  const [stationsLoading, setStationsLoading] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -61,24 +55,21 @@ export default function BookingForm() {
     const loadStations = async () => {
       try {
         setStationsLoading(true);
-
         const data = await getStations();
-
-        console.log('Stations loaded from backend:', data);
-
-        setStations(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to load stations:', error);
-        setStations([]);
+        if (Array.isArray(data) && data.length > 0) {
+          setStations(data);
+        }
+      } catch (err) {
+        console.warn('Using fallback stations list:', err.message);
       } finally {
         setStationsLoading(false);
       }
     };
-
     loadStations();
   }, []);
 
-  const handleSwap = () => {
+  const handleSwap = (e) => {
+    e.stopPropagation();
     setFrom(to);
     setTo(from);
   };
@@ -86,262 +77,337 @@ export default function BookingForm() {
   const handleSearch = () => {
     setError('');
     if (!from || !to) {
-      setError('Please select both origin and destination.');
+      setError('Please select both departure and destination stations.');
       return;
     }
     if (from.code === to.code) {
-      setError('Origin and destination cannot be the same.');
+      setError('Departure and destination stations cannot be the same.');
       return;
     }
     if (!date) {
-      setError('Please select a travel date.');
+      setError('Please choose a valid travel date.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const params = new URLSearchParams({
-        from: from.code,
-        to: to.code,
-        date: date,
-        passengers: passengers.toString(),
-        class: travelClass,
-      });
-      navigate(`/trains?${params.toString()}`);
-    }, 600);
+    const params = new URLSearchParams({
+      from: from.code,
+      to: to.code,
+      date,
+      passengers: passengers.toString(),
+      class: travelClass,
+    });
+
+    navigate(`/trains?${params.toString()}`);
   };
 
   const formatDateDisplay = (dateStr) => {
     if (!dateStr) return 'Select Date';
-    const d = new Date(dateStr + 'T00:00:00');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const dateObj = new Date(dateStr + 'T00:00:00');
     dateObj.setHours(0, 0, 0, 0);
     if (dateObj.getTime() === today.getTime()) return 'Today';
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
   const filteredStations = stations.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.code.toLowerCase().includes(searchQuery.toLowerCase())
+    (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.city || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="bg-white border border-stone-200 rounded-[2rem] p-4 lg:p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] relative" ref={dropdownRef}>
-
+    <div
+      ref={dropdownRef}
+      className="bg-white border border-stone-200/80 rounded-[2rem] p-5 lg:p-7 shadow-[0_20px_60px_-15px_rgba(37,99,235,0.08)] relative"
+    >
       {error && (
-        <div className="absolute -top-12 left-0 right-0 bg-rose-700 text-white text-sm font-semibold px-4 py-2 rounded-lg flex items-center justify-center shadow-md animate-in slide-in-from-bottom-2 fade-in">
+        <div className="absolute -top-12 left-0 right-0 bg-rose-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center justify-center shadow-md animate-in fade-in">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-3">
-
-        {/* Destinations Group */}
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 relative">
-
+      <div className="space-y-4">
+        
+        {/* Row 1: Departure & Destination with Center Swap Button */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+          
           {/* FROM */}
           <div
-            className={`bg-stone-50 rounded-2xl p-4 lg:p-5 border transition-all cursor-text group ${activeDropdown === 'from' ? 'border-rose-700 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : 'border-stone-200 hover:border-stone-300 hover:bg-stone-100/50'}`}
+            className={`bg-[#f8faff] rounded-2xl p-4 lg:p-5 border transition-all cursor-pointer relative group
+              ${activeDropdown === 'from' ? 'border-[#2563eb] bg-white shadow-md' : 'border-stone-200 hover:border-blue-300'}`}
             onClick={() => { setActiveDropdown('from'); setSearchQuery(''); }}
           >
-            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 block">From</span>
-            <div className="flex items-center gap-3">
-              <MapPin className={`w-5 h-5 transition-opacity ${activeDropdown === 'from' || from ? 'text-rose-700 opacity-100' : 'text-stone-400 group-hover:opacity-100'}`} />
-              {activeDropdown === 'from' ? (
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="City or Station Code"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none text-stone-900 w-full outline-none placeholder:text-stone-400 font-semibold text-lg"
-                />
-              ) : (
-                <div className="text-stone-900 w-full font-semibold text-lg truncate">
-                  {from ? from.name : <span className="text-stone-400">Departure City</span>}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* SWAP BUTTON */}
-          <div
-            onClick={handleSwap}
-            className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full border border-stone-200 items-center justify-center z-10 text-stone-500 cursor-pointer hover:bg-stone-100 hover:text-stone-900 hover:border-stone-300 transition-all shadow-sm active:scale-95"
-          >
-            <ArrowRightLeft className="w-4 h-4" />
-          </div>
-
-          {/* TO */}
-          <div
-            className={`bg-stone-50 rounded-2xl p-4 lg:p-5 border transition-all cursor-text group ${activeDropdown === 'to' ? 'border-rose-700 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : 'border-stone-200 hover:border-stone-300 hover:bg-stone-100/50'}`}
-            onClick={() => { setActiveDropdown('to'); setSearchQuery(''); }}
-          >
-            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 block">To</span>
-            <div className="flex items-center gap-3">
-              <MapPin className={`w-5 h-5 transition-opacity ${activeDropdown === 'to' || to ? 'text-rose-700 opacity-100' : 'text-stone-400 group-hover:opacity-100'}`} />
-              {activeDropdown === 'to' ? (
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="City or Station Code"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none text-stone-900 w-full outline-none placeholder:text-stone-400 font-semibold text-lg"
-                />
-              ) : (
-                <div className="text-stone-900 w-full font-semibold text-lg truncate">
-                  {to ? to.name : <span className="text-stone-400">Destination City</span>}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Dropdown for stations */}
-          {(activeDropdown === 'from' || activeDropdown === 'to') && (
-            <div className="absolute top-[calc(100%+8px)] left-0 right-0 sm:left-auto sm:right-auto sm:w-[280px] bg-white border border-stone-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] z-50 p-2 cursor-default">
-              <div className="overflow-y-auto py-2 custom-scrollbar max-h-[300px]">
-                {stationsLoading ? (
-                  <div className="px-4 py-8 text-center text-stone-500 text-sm font-medium">
-                    Loading stations...
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
+              From
+            </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <MapPin className="w-5 h-5 text-[#2563eb] flex-shrink-0" />
+                {activeDropdown === 'from' ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search city or code…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-none text-stone-900 w-full outline-none font-bold text-lg"
+                  />
+                ) : (
+                  <div>
+                    <div className="text-stone-900 font-extrabold text-base lg:text-lg leading-tight truncate">
+                      {from ? from.name : 'Departure City'}
+                    </div>
+                    <div className="text-xs font-semibold text-stone-400 mt-0.5">
+                      {from ? `${from.code} · ${from.city || ''}` : 'Enter city or station name'}
+                    </div>
                   </div>
+                )}
+              </div>
+              <ChevronDown className="w-4 h-4 text-stone-400 flex-shrink-0 ml-2" />
+            </div>
+
+            {/* Dropdown for FROM */}
+            {activeDropdown === 'from' && (
+              <div
+                className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-stone-200/90 rounded-2xl shadow-2xl z-[60] p-2 max-h-[300px] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
+                onClick={e => e.stopPropagation()}
+              >
+                {stationsLoading ? (
+                  <div className="p-4 text-center text-xs font-semibold text-stone-400">Loading stations…</div>
                 ) : filteredStations.length > 0 ? (
                   filteredStations.map((s) => (
                     <div
                       key={s.code}
-                      className="px-4 py-3 hover:bg-stone-50 cursor-pointer flex items-center justify-between transition-colors rounded-lg"
-                      onClick={() => {
-                        if (activeDropdown === 'from') {
-                          setFrom(s);
-                        } else if (activeDropdown === 'to') {
-                          setTo(s);
-                        }
-
-                        setSearchQuery('');
-                        setActiveDropdown(null);
-                      }}
+                      onClick={() => { setFrom(s); setActiveDropdown(null); }}
+                      className="p-3 hover:bg-blue-50/60 rounded-xl cursor-pointer flex items-center justify-between transition-colors"
                     >
-                      <div>
-                        <div className="text-stone-900 font-medium flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-stone-400" />
-                          {s.name}
+                      <div className="flex items-center gap-2.5">
+                        <MapPin className="w-4 h-4 text-[#2563eb]" />
+                        <div>
+                          <div className="text-sm font-bold text-stone-900">{s.name}</div>
+                          <div className="text-xs text-stone-400">{s.city}</div>
                         </div>
                       </div>
-
-                      <div className="text-xs font-bold text-stone-500 bg-stone-100 border border-stone-200 px-2 py-1 rounded">
+                      <span className="text-xs font-mono font-bold bg-blue-50 text-blue-700 px-2 py-1 rounded">
                         {s.code}
-                      </div>
+                      </span>
                     </div>
                   ))
                 ) : (
-                  <div className="px-4 py-8 text-center text-stone-500 text-sm font-medium">
-                    No stations found...
+                  <div className="p-4 text-center text-xs font-semibold text-stone-400">No stations found</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SWAP BUTTON (Floats in center between From & To) */}
+          <button
+            type="button"
+            onClick={handleSwap}
+            aria-label="Swap origin and destination"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-stone-200 shadow-sm hover:shadow-md hover:bg-blue-50 text-[#2563eb] flex items-center justify-center transition-all z-10 active:scale-95 hidden md:flex"
+          >
+            <ArrowRightLeft className="w-4 h-4 text-[#2563eb]" />
+          </button>
+
+          {/* TO */}
+          <div
+            className={`bg-[#f8faff] rounded-2xl p-4 lg:p-5 border transition-all cursor-pointer relative group
+              ${activeDropdown === 'to' ? 'border-[#2563eb] bg-white shadow-md' : 'border-stone-200 hover:border-blue-300'}`}
+            onClick={() => { setActiveDropdown('to'); setSearchQuery(''); }}
+          >
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
+              To
+            </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <MapPin className="w-5 h-5 text-[#2563eb] flex-shrink-0" />
+                {activeDropdown === 'to' ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search city or code…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-none text-stone-900 w-full outline-none font-bold text-lg"
+                  />
+                ) : (
+                  <div>
+                    <div className="text-stone-900 font-extrabold text-base lg:text-lg leading-tight truncate">
+                      {to ? to.name : 'Destination City'}
+                    </div>
+                    <div className="text-xs font-semibold text-stone-400 mt-0.5">
+                      {to ? `${to.code} · ${to.city || ''}` : 'Enter city or station name'}
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
-
-          <div className="flex gap-3 relative">
-            {/* Date Picker */}
-            <div
-              className="bg-stone-50 rounded-2xl p-4 lg:p-5 border border-stone-200 hover:border-stone-300 hover:bg-stone-100/50 transition-colors cursor-pointer group flex-1 sm:min-w-[140px] relative"
-            >
-              <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 block">Date</span>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-rose-700 opacity-70 group-hover:opacity-100 transition-opacity" />
-                <span className="text-stone-900 font-semibold text-lg">{formatDateDisplay(date)}</span>
-                <ChevronDown className="w-4 h-4 text-stone-400 ml-auto" />
-              </div>
-              <input
-                type="date"
-                value={date}
-                min={getLocalDate()}
-                onChange={(e) => setDate(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
+              <ChevronDown className="w-4 h-4 text-stone-400 flex-shrink-0 ml-2" />
             </div>
 
-            {/* Passenger & Class */}
-            <div
-              className={`bg-stone-50 rounded-2xl p-4 lg:p-5 border transition-all cursor-pointer group flex-1 sm:min-w-[170px] relative ${activeDropdown === 'passengers' ? 'border-rose-700 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : 'border-stone-200 hover:border-stone-300 hover:bg-stone-100/50'}`}
-              onClick={() => setActiveDropdown(activeDropdown === 'passengers' ? null : 'passengers')}
-            >
-              <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 block">Travelers</span>
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-rose-700 opacity-70 group-hover:opacity-100 transition-opacity" />
-                <div className="flex flex-col">
-                  <span className="text-stone-900 font-semibold text-base leading-tight">{passengers} {passengers === 1 ? 'Adult' : 'Adults'}</span>
-                  <span className="text-[11px] text-stone-500 font-medium">{travelClass}</span>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-stone-400 ml-auto transition-transform duration-300 ${activeDropdown === 'passengers' ? 'rotate-180' : ''}`} />
-              </div>
-
-              {/* Dropdown content */}
-              {activeDropdown === 'passengers' && (
-                <div
-                  className="absolute top-[calc(100%+8px)] right-0 w-[280px] bg-white border border-stone-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] z-50 p-5 cursor-default"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <div className="mb-6">
-                    <div className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3">Passengers</div>
-                    <div className="flex items-center justify-between bg-stone-50 p-2 rounded-xl border border-stone-200">
-                      <button
-                        onClick={() => setPassengers(Math.max(1, passengers - 1))}
-                        className="w-10 h-10 rounded-lg bg-white border border-stone-200 text-stone-900 flex items-center justify-center hover:bg-stone-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        disabled={passengers <= 1}
-                      >-</button>
-                      <span className="text-xl font-bold text-stone-900">{passengers}</span>
-                      <button
-                        onClick={() => setPassengers(Math.min(9, passengers + 1))}
-                        className="w-10 h-10 rounded-lg bg-white border border-stone-200 text-stone-900 flex items-center justify-center hover:bg-stone-100 transition-colors"
-                      >+</button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3">Travel Class</div>
-                    <div className="flex flex-col gap-2">
-                      {['Economy', 'Premium', 'First Class'].map(c => (
-                        <div
-                          key={c}
-                          onClick={() => {
-                            setTravelClass(c);
-                            setActiveDropdown(null);
-                          }}
-                          className={`px-4 py-3 rounded-xl text-sm font-semibold cursor-pointer flex items-center justify-between transition-all ${travelClass === c ? 'bg-rose-50 text-rose-800 border border-rose-200' : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'}`}
-                        >
-                          {c}
-                          {travelClass === c && <Check className="w-4 h-4" />}
+            {/* Dropdown for TO */}
+            {activeDropdown === 'to' && (
+              <div
+                className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-stone-200/90 rounded-2xl shadow-2xl z-[60] p-2 max-h-[300px] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
+                onClick={e => e.stopPropagation()}
+              >
+                {stationsLoading ? (
+                  <div className="p-4 text-center text-xs font-semibold text-stone-400">Loading stations…</div>
+                ) : filteredStations.length > 0 ? (
+                  filteredStations.map((s) => (
+                    <div
+                      key={s.code}
+                      onClick={() => { setTo(s); setActiveDropdown(null); }}
+                      className="p-3 hover:bg-blue-50/60 rounded-xl cursor-pointer flex items-center justify-between transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <MapPin className="w-4 h-4 text-[#2563eb]" />
+                        <div>
+                          <div className="text-sm font-bold text-stone-900">{s.name}</div>
+                          <div className="text-xs text-stone-400">{s.city}</div>
                         </div>
-                      ))}
+                      </div>
+                      <span className="text-xs font-mono font-bold bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                        {s.code}
+                      </span>
                     </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-xs font-semibold text-stone-400">No stations found</div>
+                )}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Row 2: Date + Travelers + Search Button */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
+          
+          {/* Date Picker */}
+          <div className="lg:col-span-4 bg-[#f8faff] rounded-2xl p-4 border border-stone-200 hover:border-blue-300 transition-all cursor-pointer relative group">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
+              Date
+            </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-[#2563eb]" />
+                <span className="text-stone-900 font-extrabold text-base lg:text-lg">
+                  {formatDateDisplay(date)}
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-stone-400" />
+            </div>
+            <input
+              type="date"
+              value={date}
+              min={getLocalDate()}
+              onChange={(e) => setDate(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            />
+          </div>
+
+          {/* Passengers & Class */}
+          <div
+            className={`lg:col-span-4 bg-[#f8faff] rounded-2xl p-4 border transition-all cursor-pointer relative group
+              ${activeDropdown === 'travelers' ? 'border-[#2563eb] bg-white shadow-md' : 'border-stone-200 hover:border-blue-300'}`}
+            onClick={() => setActiveDropdown(activeDropdown === 'travelers' ? null : 'travelers')}
+          >
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
+              Travelers
+            </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-[#2563eb]" />
+                <div>
+                  <span className="text-stone-900 font-extrabold text-base lg:text-lg block leading-none">
+                    {passengers} {passengers === 1 ? 'Adult' : 'Adults'}
+                  </span>
+                  <span className="text-xs font-semibold text-stone-400 mt-1 block">
+                    {travelClass}
+                  </span>
+                </div>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${activeDropdown === 'travelers' ? 'rotate-180' : ''}`} />
+            </div>
+
+            {/* Dropdown for Travelers */}
+            {activeDropdown === 'travelers' && (
+              <div
+                className="absolute top-[calc(100%+8px)] left-0 right-0 sm:left-auto sm:right-0 sm:w-[290px] bg-white border border-stone-200/90 rounded-2xl shadow-2xl z-[60] p-5 cursor-default animate-in fade-in zoom-in-95 duration-150"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="mb-5">
+                  <span className="text-xs font-bold text-stone-400 uppercase tracking-widest block mb-2">Number of Passengers</span>
+                  <div className="flex items-center justify-between bg-stone-50 p-2 rounded-xl border border-stone-200">
+                    <button
+                      type="button"
+                      onClick={() => setPassengers(Math.max(1, passengers - 1))}
+                      disabled={passengers <= 1}
+                      className="w-9 h-9 rounded-lg bg-white border border-stone-200 text-stone-800 font-bold flex items-center justify-center hover:bg-stone-100 disabled:opacity-40"
+                    >-</button>
+                    <span className="font-extrabold text-lg text-stone-900">{passengers}</span>
+                    <button
+                      type="button"
+                      onClick={() => setPassengers(Math.min(6, passengers + 1))}
+                      disabled={passengers >= 6}
+                      className="w-9 h-9 rounded-lg bg-white border border-stone-200 text-stone-800 font-bold flex items-center justify-center hover:bg-stone-100 disabled:opacity-40"
+                    >+</button>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div>
+                  <span className="text-xs font-bold text-stone-400 uppercase tracking-widest block mb-2">Travel Class</span>
+                  <div className="space-y-1.5 max-h-[190px] overflow-y-auto pr-1">
+                    {[
+                      'All Classes',
+                      'Sleeper (SL)',
+                      'AC 3 Tier (3A)',
+                      'AC 2 Tier (2A)',
+                      'First AC (1A)',
+                      'AC Chair Car (CC)',
+                      'Executive Chair (EC)',
+                    ].map(c => (
+                      <div
+                        key={c}
+                        onClick={() => { setTravelClass(c); setActiveDropdown(null); }}
+                        className={`p-2.5 rounded-xl text-xs font-bold cursor-pointer flex items-center justify-between transition-colors
+                          ${travelClass === c ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'hover:bg-stone-50 text-stone-700'}`}
+                      >
+                        {c}
+                        {travelClass === c && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Search Button */}
-          <button
-            onClick={handleSearch}
-            disabled={isLoading}
-            className="bg-rose-700 hover:bg-rose-800 text-white rounded-2xl px-8 flex items-center justify-center gap-3 font-semibold text-lg tracking-wide transition-all shadow-[0_8px_30px_rgba(225,29,72,0.2)] hover:shadow-[0_8px_30px_rgba(225,29,72,0.3)] hover:-translate-y-0.5 active:translate-y-0 mt-2 lg:mt-0 disabled:opacity-70 disabled:hover:translate-y-0 min-w-[160px]"
-          >
-            {isLoading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <>
-                <Search className="w-5 h-5" />
-                <span className="lg:hidden xl:inline">Search</span>
-              </>
-            )}
-          </button>
+          <div className="lg:col-span-4">
+            <button
+              type="button"
+              onClick={handleSearch}
+              disabled={isLoading}
+              className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-2xl py-4 px-6 font-extrabold text-base shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/35 transition-all flex items-center justify-center gap-2 group active:scale-[0.99]"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Search className="w-5 h-5" />
+                  <span>Search Trains</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </div>
 
         </div>
+
       </div>
     </div>
   );

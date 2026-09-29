@@ -131,12 +131,30 @@ INSERT INTO route_stops (trip_id, station_id, stop_sequence, arrival_time, depar
 (5, (SELECT id FROM stations WHERE code='BKSC'), 6, '11:15', '11:20', 5, 308, '1'),
 (5, (SELECT id FROM stations WHERE code='RNC'),  7, '13:15', NULL,    0, 421, '1');
 
+-- Trip 6: Mumbai Tejas Rajdhani (MMCT -> ST -> BRC -> RTM -> KOTA -> NDLS)
+INSERT INTO route_stops (trip_id, station_id, stop_sequence, arrival_time, departure_time, halt_minutes, distance_km, platform) VALUES
+(6, (SELECT id FROM stations WHERE code='MMCT'), 1, NULL,    '17:00', 0, 0,    '1'),
+(6, (SELECT id FROM stations WHERE code='ST'),   2, '19:42', '19:47', 5, 263,  '1'),
+(6, (SELECT id FROM stations WHERE code='BRC'),  3, '21:05', '21:15', 10, 392, '2'),
+(6, (SELECT id FROM stations WHERE code='RTM'),  4, '00:25', '00:28', 3, 653,  '5'),
+(6, (SELECT id FROM stations WHERE code='KOTA'), 5, '03:15', '03:25', 10, 920, '1'),
+(6, (SELECT id FROM stations WHERE code='NDLS'), 6, '08:32', NULL,    0, 1386, '1');
+
 -- Trip 7: Mumbai-Ahmedabad Shatabdi (MMCT -> ST -> BRC -> ADI)
 INSERT INTO route_stops (trip_id, station_id, stop_sequence, arrival_time, departure_time, halt_minutes, distance_km, platform) VALUES
 (7, (SELECT id FROM stations WHERE code='MMCT'), 1, NULL,    '06:20', 0, 0,   '1'),
 (7, (SELECT id FROM stations WHERE code='ST'),   2, '09:22', '09:25', 3, 263, '1'),
 (7, (SELECT id FROM stations WHERE code='BRC'),  3, '10:55', '10:58', 3, 392, '2'),
 (7, (SELECT id FROM stations WHERE code='ADI'),  4, '12:45', NULL,    0, 491, '5');
+
+-- Trip 8: Coromandel Express (HWH -> KGP -> BBS -> VSKP -> BZA -> MAS)
+INSERT INTO route_stops (trip_id, station_id, stop_sequence, arrival_time, departure_time, halt_minutes, distance_km, platform) VALUES
+(8, (SELECT id FROM stations WHERE code='HWH'),  1, NULL,    '15:30', 0, 0,    '22'),
+(8, (SELECT id FROM stations WHERE code='KGP'),  2, '17:10', '17:15', 5, 115,  '3'),
+(8, (SELECT id FROM stations WHERE code='BBS'),  3, '21:50', '21:55', 5, 437,  '4'),
+(8, (SELECT id FROM stations WHERE code='VSKP'), 4, '04:20', '04:40', 20, 880, '1'),
+(8, (SELECT id FROM stations WHERE code='BZA'),  5, '09:50', '10:00', 10, 1229,'1'),
+(8, (SELECT id FROM stations WHERE code='MAS'),  6, '17:00', NULL,    0, 1660, '5');
 
 
 -- 5. COACHES
@@ -240,9 +258,10 @@ BEGIN
 END $$;
 
 
--- 7. DEFAULT TEST USER (Password: 'password123' hashed with bcrypt)
+-- 7. DEFAULT TEST USERS (Password: 'password123' hashed with bcrypt)
 INSERT INTO users (id, name, email, password_hash) VALUES
-(1, 'Arjun Sharma', 'arjun@railview.in', '$2b$10$wT8m96pX6tY5w4/1Zz.82.Z2x1yDfehR4Rz0tX0g1G5C5tA8O7vUa')
-ON CONFLICT (email) DO NOTHING;
+(1, 'Arjun Sharma', 'arjun@railvista.in', '$2b$10$.8scBr7F3l9toC0qZ7lc1eDINVHgE4shYcjJfD0tIshsE8G/VPw1G'),
+(2, 'Demo Traveler', 'demo@railvista.in', '$2b$10$.8scBr7F3l9toC0qZ7lc1eDINVHgE4shYcjJfD0tIshsE8G/VPw1G')
+ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));

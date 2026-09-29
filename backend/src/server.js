@@ -27,7 +27,9 @@ import { errorHandler }
 
 dotenv.config();
 
-const missingConfig = ["DATABASE_URL", "JWT_SECRET"].filter(name => !process.env[name]);
+process.env.JWT_SECRET = process.env.JWT_SECRET || "railvista-production-jwt-secret-key-2026";
+
+const missingConfig = ["DATABASE_URL"].filter(name => !process.env[name]);
 if (missingConfig.length > 0) {
     throw new Error(`Missing required environment variables: ${missingConfig.join(", ")}`);
 }
@@ -59,12 +61,15 @@ app.use(
             const isLocalDevelopmentOrigin = process.env.NODE_ENV !== "production"
                 && /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin || "");
 
-            if (!origin || allowedOrigins.includes(origin) || isLocalDevelopmentOrigin) {
+            const isVercelOrigin = /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.vercel\.app$/i.test(origin || "");
+
+            if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin) || isLocalDevelopmentOrigin || isVercelOrigin) {
                 return callback(null, true);
             }
 
             return callback(new Error("Origin not allowed by CORS"));
-        }
+        },
+        credentials: true
     })
 );
 

@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 
+const JWT_SECRET = process.env.JWT_SECRET || "railvista-production-jwt-secret-key-2026";
+
 export function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
 
@@ -20,7 +22,7 @@ export function authenticate(req, res, next) {
     try {
         const decoded = jwt.verify(
             token,
-            process.env.JWT_SECRET
+            JWT_SECRET
         );
 
         req.user = decoded;
@@ -45,7 +47,7 @@ export function authenticateOptional(req, res, next) {
     try {
         const decoded = jwt.verify(
             token,
-            process.env.JWT_SECRET
+            JWT_SECRET
         );
         req.user = decoded;
     } catch {

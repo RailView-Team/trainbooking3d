@@ -1,15 +1,24 @@
-import React, { useState, useMemo } from 'react';
-import { useLocation, useNavigate, Link, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, User, TrainFront, MapPin, Calendar, Armchair, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CLASSES } from '../coachData';
 import { MOCK_STATIONS } from '../components/BookingForm';
+import { getStations } from '../service/api';
 
 export default function PassengerDetailsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
-  const { trainId } = useParams();
+  const trainId = searchParams.get('trainId') || '';
+
+  const [stations, setStations] = useState(MOCK_STATIONS);
+
+  useEffect(() => {
+    getStations()
+      .then(data => { if (Array.isArray(data) && data.length > 0) setStations(data); })
+      .catch(err => console.error('Failed to load stations in PassengerDetailsPage:', err));
+  }, []);
 
   // Read all booking state from URL params
   const fromCode = searchParams.get('from') || '';
@@ -20,10 +29,13 @@ export default function PassengerDetailsPage() {
   const coachId = searchParams.get('coach') || '';
   const seatsStr = searchParams.get('seats') || '';
   const seatIds = seatsStr ? seatsStr.split(',').map(s => s.trim()) : [];
+  const seatNumbersStr = searchParams.get('seatNumbers') || '';
+  const seatNumbers = seatNumbersStr ? seatNumbersStr.split(',').map(s => s.trim()) : [];
+  const getSeatNumber = (id, idx) => seatNumbers[idx] || id;
 
   const selectedClassInfo = CLASSES.find(c => c.code === classCode);
-  const fromStation = MOCK_STATIONS.find(s => s.code === fromCode);
-  const toStation = MOCK_STATIONS.find(s => s.code === toCode);
+  const fromStation = stations.find(s => s.code === fromCode);
+  const toStation = stations.find(s => s.code === toCode);
 
   const farePerSeat = selectedClassInfo?.fare || 0;
   const totalFare = farePerSeat * seatIds.length;
@@ -89,10 +101,12 @@ export default function PassengerDetailsPage() {
   const handleContinue = () => {
     setSubmitted(true);
     if (validate()) {
-      searchParams.set('trainId', trainId);
-      // Encode passenger data into URL (lightweight for review page)
-      const passengerData = passengers.map(p => `${p.name}|${p.age}|${p.gender}|${p.berthPreference || 'none'}|${p.seatId}`);
+      if (trainId) searchParams.set('trainId', trainId);
+      const passengerData = passengers.map((p, idx) =>
+        `${encodeURIComponent(p.name)}|${p.age}|${p.gender}|${encodeURIComponent(p.berthPreference || 'none')}|${p.seatId}|${encodeURIComponent(getSeatNumber(p.seatId, idx))}`
+      );
       searchParams.set('passengerData', passengerData.join(';;'));
+      searchParams.set('passengers', String(passengers.length));
       navigate(`/booking/review?${searchParams.toString()}`);
     }
   };
@@ -166,7 +180,7 @@ export default function PassengerDetailsPage() {
                   </h3>
                   <div className="flex items-center gap-3">
                     <div className="bg-rose-50 border border-rose-100 px-4 py-1.5 rounded-lg">
-                      <span className="text-rose-800 font-bold text-sm">Seat {p.seatId}</span>
+                      <span className="text-rose-800 font-bold text-sm">Seat {getSeatNumber(p.seatId, index)}</span>
                     </div>
                     <div className="bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg">
                       <span className="text-stone-600 font-bold text-xs">{coachId}</span>
@@ -310,9 +324,9 @@ export default function PassengerDetailsPage() {
                   <div className="pb-4 border-b border-stone-100">
                     <div className="text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Selected Seats</div>
                     <div className="flex flex-wrap gap-2">
-                      {seatIds.map(id => (
-                        <span key={id} className="bg-rose-50 border border-rose-100 text-rose-800 font-bold text-sm px-3 py-1.5 rounded-lg">
-                          {id}
+                      {seatIds.map((id, idx) => (
+                        <span key={id} className="bg-blue-50 border border-blue-100 text-blue-700 font-bold text-sm px-3 py-1.5 rounded-lg">
+                          Seat {getSeatNumber(id, idx)}
                         </span>
                       ))}
                     </div>
@@ -324,9 +338,9 @@ export default function PassengerDetailsPage() {
               <div className="bg-white border border-stone-200/60 rounded-[2rem] p-6 lg:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
                 <h3 className="text-lg font-bold text-stone-900 mb-6 border-b border-stone-100 pb-4">Fare Details</h3>
                 <div className="space-y-3 mb-6">
-                  {seatIds.map(id => (
+                  {seatIds.map((id, idx) => (
                     <div key={id} className="flex justify-between text-sm font-medium">
-                      <span className="text-stone-500">Seat {id} ({coachId})</span>
+                      <span className="text-stone-500">Seat {getSeatNumber(id, idx)} ({coachId})</span>
                       <span className="text-stone-900">₹{farePerSeat}</span>
                     </div>
                   ))}
@@ -334,7 +348,7 @@ export default function PassengerDetailsPage() {
 
                 <div className="flex justify-between items-center bg-stone-50 p-4 rounded-xl border border-stone-200 mb-6">
                   <span className="text-stone-500 font-bold uppercase tracking-wider text-xs">Total Amount</span>
-                  <span className="text-2xl font-black text-rose-800">₹{totalFare}</span>
+                  <span className="text-2xl font-black text-blue-600">₹{totalFare}</span>
                 </div>
 
                 {/* Validation error summary */}
@@ -349,7 +363,7 @@ export default function PassengerDetailsPage() {
 
                 <button
                   onClick={handleContinue}
-                  className="w-full bg-stone-900 hover:bg-stone-800 text-white rounded-2xl py-4 font-bold text-lg tracking-wide transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.16)] hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-2xl py-4 font-bold text-lg tracking-wide transition-all shadow-md shadow-blue-600/25 hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2"
                 >
                   Continue to Review <ChevronRight className="w-5 h-5" />
                 </button>

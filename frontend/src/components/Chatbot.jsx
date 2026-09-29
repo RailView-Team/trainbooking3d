@@ -44,7 +44,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: 'Namaste! I am **RailBot**, your RailView Travel Assistant 🚆.\n\nAsk me about train schedules, PNR status, 3D coach views, or railway booking guidelines!'
+      text: 'Namaste! I am **RailBot**, your RailVista Travel Assistant 🚆.\n\nAsk me about train schedules, PNR status, 3D coach views, or railway booking guidelines!'
     }
   ]);
 
@@ -110,7 +110,7 @@ export default function Chatbot() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-gradient-to-r from-rose-700 to-rose-600 hover:from-rose-800 hover:to-rose-700 text-white rounded-full p-4 shadow-[0_8px_25px_rgba(225,29,72,0.35)] flex items-center justify-center relative group border border-rose-500/30"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full p-4 shadow-[0_8px_25px_rgba(37,99,235,0.35)] flex items-center justify-center relative group border border-blue-500/30"
           aria-label="Open RailBot AI Assistant"
         >
           {isOpen ? (
@@ -140,13 +140,13 @@ export default function Chatbot() {
             {/* Chat Header */}
             <div className="bg-gradient-to-r from-stone-900 to-stone-800 text-white p-5 flex items-center justify-between border-b border-stone-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-rose-600 flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-extrabold text-sm text-white">RailBot</h3>
-                    <span className="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/30">
+                    <span className="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-500/30">
                       AI Railway Guide
                     </span>
                   </div>
@@ -170,7 +170,7 @@ export default function Chatbot() {
                 <button
                   key={idx}
                   onClick={() => handleSend(prompt)}
-                  className="whitespace-nowrap text-[11px] font-semibold bg-white border border-stone-200 hover:border-rose-300 hover:text-rose-700 text-stone-600 px-3 py-1.5 rounded-full shadow-sm transition-all"
+                  className="whitespace-nowrap text-[11px] font-semibold bg-white border border-stone-200 hover:border-blue-300 hover:text-blue-700 text-stone-600 px-3 py-1.5 rounded-full shadow-sm transition-all"
                 >
                   {prompt}
                 </button>

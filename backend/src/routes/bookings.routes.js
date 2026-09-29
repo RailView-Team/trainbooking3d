@@ -70,9 +70,10 @@ router.post("/", authenticateOptional, async (req, res, next) => {
             `
             SELECT id, train_id, class_code, class_name, fare
             FROM coaches
-            WHERE id = $1 AND train_id = $2
+            WHERE (id::text = $1 OR code = $1) AND train_id = $2
+            LIMIT 1
             `,
-            [coachId, trainId]
+            [String(coachId), trainId]
         );
 
         if (coachResult.rows.length === 0) {
@@ -81,6 +82,7 @@ router.post("/", authenticateOptional, async (req, res, next) => {
         }
 
         const coach = coachResult.rows[0];
+        const actualCoachId = coach.id;
 
         if (coach.class_code !== classCode) {
             await client.query("ROLLBACK");
@@ -137,7 +139,7 @@ router.post("/", authenticateOptional, async (req, res, next) => {
             WHERE id = ANY($1::int[]) AND coach_id = $2
             FOR UPDATE
             `,
-            [seatIds, coachId]
+            [seatIds, actualCoachId]
         );
 
         if (seatResult.rows.length !== seatIds.length) {
@@ -165,7 +167,7 @@ router.post("/", authenticateOptional, async (req, res, next) => {
                   OR
                   (b.boarding_stop_id IS NULL OR b.alighting_stop_id IS NULL)
               )
-            FOR UPDATE
+            FOR UPDATE OF bs, b
             `,
             [seatIds, tripId, journeyDate, qFromSeq, qToSeq]
         );
@@ -194,7 +196,7 @@ router.post("/", authenticateOptional, async (req, res, next) => {
             RETURNING *
             `,
             [
-                pnr, userId, tripId, coachId,
+                pnr, userId, tripId, actualCoachId,
                 boardingStopId, alightingStopId, journeyDate,
                 totalAmount, contactEmail || null, contactPhone || null
             ]

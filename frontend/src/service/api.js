@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const rawUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").trim().replace(/\/+$/, '');
+const API_BASE_URL = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl}/api`;
 
 export const api = axios.create({
     baseURL: API_BASE_URL,
@@ -9,7 +9,7 @@ export const api = axios.create({
 
 // Automatically attach JWT token from localStorage to every outgoing request
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("aerorail.token");
+    const token = localStorage.getItem("railvista.token") || localStorage.getItem("aerorail.token");
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -17,6 +17,25 @@ api.interceptors.request.use((config) => {
 }, (error) => {
     return Promise.reject(error);
 });
+
+// Automatically handle 401 unauthorized responses to avoid stale login states
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            const url = error.config?.url || '';
+            // Do not clear tokens on intentional invalid login/register password attempts
+            if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
+                localStorage.removeItem("railvista.token");
+                localStorage.removeItem("railvista.user");
+                localStorage.removeItem("aerorail.token");
+                localStorage.removeItem("aerorail.user");
+                window.dispatchEvent(new Event('auth:unauthorized'));
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 // Stations
 export const getStations = async () => {
