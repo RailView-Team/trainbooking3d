@@ -7,8 +7,8 @@ const CLASSES = [
   { code: '2A', name: 'Second AC', fare: 2800, available: 12, desc: 'Comfortable air-conditioned sleeper with curtains', amenities: ['Bedding', 'Curtains', 'Reading Light'] },
   { code: '3A', name: 'Third AC', fare: 1800, available: 45, desc: 'Air-conditioned sleeper, budget friendly', amenities: ['Bedding'] },
   { code: 'SL', name: 'Sleeper', fare: 650, available: 120, desc: 'Standard non-AC sleeper class', amenities: ['Fan'] },
-  { code: 'EC', name: 'Exec Chair', fare: 1850, available: 8, desc: 'Spacious AC seating with ample legroom', amenities: ['Extra Legroom', 'Meals', 'Tray Table'] },
-  { code: 'CC', name: 'AC Chair', fare: 950, available: 20, desc: 'Air-conditioned seating for day travel', amenities: ['AC', 'Tray Table'] },
+  { code: 'EC', name: 'Executive Class', fare: 1850, available: 8, desc: 'Premium AC chair seating with extra legroom', amenities: ['Extra Legroom', 'Meals', 'Tray Table'] },
+  { code: 'CC', name: 'AC Chair Car', fare: 950, available: 20, desc: 'Air-conditioned chair seating for day travel', amenities: ['AC', 'Tray Table'] },
   { code: '2S', name: '2nd Seating', fare: 250, available: 80, desc: 'Basic non-AC seating', amenities: ['Fan'] },
 ];
 

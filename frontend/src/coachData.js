@@ -3,10 +3,30 @@ export const CLASSES = [
   { code: '2A', name: 'Second AC', fare: 2800, desc: 'Comfortable air-conditioned sleeper with curtains', capacity: 48, type: '2-Tier Sleeper', layoutDesc: 'Lower & Upper + Side Lower & Side Upper' },
   { code: '3A', name: 'Third AC', fare: 1800, desc: 'Air-conditioned sleeper, budget friendly', capacity: 72, type: '3-Tier Sleeper', layoutDesc: 'Lower, Middle, Upper + Side Lower & Side Upper' },
   { code: 'SL', name: 'Sleeper', fare: 650, desc: 'Standard non-AC sleeper class', capacity: 72, type: '3-Tier Sleeper (Non-AC)', layoutDesc: 'Lower, Middle, Upper + Side Lower & Side Upper' },
-  { code: 'EC', name: 'Exec Chair', fare: 1850, desc: 'Spacious AC seating with ample legroom', capacity: 56, type: '2x2 Premium Seating', layoutDesc: '2 Chairs Left, 2 Chairs Right' },
-  { code: 'CC', name: 'AC Chair', fare: 950, desc: 'Air-conditioned seating for day travel', capacity: 75, type: '3x2 Seating', layoutDesc: '3 Chairs Left, 2 Chairs Right' },
+  { code: 'EC', name: 'Executive Class', fare: 1850, desc: 'Premium AC chair seating with extra legroom', capacity: 56, type: '2x2 Premium Seating', layoutDesc: '2 Chairs Left, 2 Chairs Right' },
+  { code: 'CC', name: 'AC Chair Car', fare: 950, desc: 'Air-conditioned chair seating for day travel', capacity: 64, type: '2x2 Seating', layoutDesc: '2 Chairs Left, 2 Chairs Right' },
   { code: '2S', name: '2nd Seating', fare: 250, desc: 'Basic non-AC seating', capacity: 108, type: '3x3 Bench Seating', layoutDesc: '3 Seats Left, 3 Seats Right' },
 ];
+
+export const CC_SEAT_MAPPING = {
+  Seat_01_L1: 1,  Seat_01_L2: 2,  Seat_01_R1: 3,  Seat_01_R2: 4,
+  Seat_02_L1: 5,  Seat_02_L2: 6,  Seat_02_R1: 7,  Seat_02_R2: 8,
+  Seat_03_L1: 9,  Seat_03_L2: 10, Seat_03_R1: 11, Seat_03_R2: 12,
+  Seat_04_L1: 13, Seat_04_L2: 14, Seat_04_R1: 15, Seat_04_R2: 16,
+  Seat_05_L1: 17, Seat_05_L2: 18, Seat_05_R1: 19, Seat_05_R2: 20,
+  Seat_06_L1: 21, Seat_06_L2: 22, Seat_06_R1: 23, Seat_06_R2: 24,
+  Seat_07_L1: 25, Seat_07_L2: 26, Seat_07_R1: 27, Seat_07_R2: 28,
+  Seat_08_L1: 29, Seat_08_L2: 30, Seat_08_R1: 31, Seat_08_R2: 32,
+  Seat_09_L1: 33, Seat_09_L2: 34, Seat_09_R1: 35, Seat_09_R2: 36,
+  Seat_10_L1: 37, Seat_10_L2: 38, Seat_10_R1: 39, Seat_10_R2: 40,
+  Seat_11_L1: 41, Seat_11_L2: 42, Seat_11_R1: 43, Seat_11_R2: 44,
+  Seat_12_L1: 45, Seat_12_L2: 46, Seat_12_R1: 47, Seat_12_R2: 48,
+  Seat_13_L1: 49, Seat_13_L2: 50, Seat_13_R1: 51, Seat_13_R2: 52,
+  Seat_14_L1: 53, Seat_14_L2: 54, Seat_14_R1: 55, Seat_14_R2: 56,
+  Seat_15_L1: 57, Seat_15_L2: 58, Seat_15_R1: 59, Seat_15_R2: 60,
+  Seat_16_L1: 61, Seat_16_L2: 62, Seat_16_R1: 63, Seat_16_R2: 64,
+};
+export const ccSeatMapping = CC_SEAT_MAPPING;
 
 export const TRAIN_COMPOSITION = {
   '1A': ['H1'],
@@ -87,17 +107,16 @@ export function generate2DLayout(classCode) {
       });
     }
   } else if (classCode === 'CC') {
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 16; i++) {
       layout.push({
         type: 'row',
         left: [
-          { id: currentId++, type: 'Chair', pos: 'Window' },
-          { id: currentId++, type: 'Chair', pos: 'Middle' },
-          { id: currentId++, type: 'Chair', pos: 'Aisle' }
+          { id: currentId++, type: 'AC Chair', pos: 'Window' },
+          { id: currentId++, type: 'AC Chair', pos: 'Aisle' }
         ],
         right: [
-          { id: currentId++, type: 'Chair', pos: 'Aisle' },
-          { id: currentId++, type: 'Chair', pos: 'Window' }
+          { id: currentId++, type: 'AC Chair', pos: 'Aisle' },
+          { id: currentId++, type: 'AC Chair', pos: 'Window' }
         ]
       });
     }
@@ -140,10 +159,11 @@ export function generate3DLayout(classCode) {
   let currentId = 1;
   let coachLength = 40;
 
-  const addSeat = (type, pos, position, rotation = [0,0,0], size = [1, 0.2, 2]) => {
+  const addSeat = (type, pos, position, rotation = [0,0,0], size = [1, 0.2, 2], extra = {}) => {
     seats.push({
       id: currentId++, type, pos,
       position, rotation, size,
+      ...extra,
     });
   };
 
@@ -201,14 +221,14 @@ export function generate3DLayout(classCode) {
       }
     }
   } else if (classCode === 'CC') {
-    coachLength = 15 * 1.5 + 2;
-    for (let i = 0; i < 15; i++) {
-      const z = (i * 1.5) - (coachLength / 2) + 1.5;
-      addSeat('Chair', 'Window', [-1.5, 0.3, z], [0,0,0], [0.5, 0.15, 0.5]);
-      addSeat('Chair', 'Middle', [-0.9, 0.3, z], [0,0,0], [0.5, 0.15, 0.5]);
-      addSeat('Chair', 'Aisle',  [-0.3, 0.3, z], [0,0,0], [0.5, 0.15, 0.5]);
-      addSeat('Chair', 'Aisle',  [0.7, 0.3, z], [0,0,0], [0.5, 0.15, 0.5]);
-      addSeat('Chair', 'Window', [1.3, 0.3, z], [0,0,0], [0.5, 0.15, 0.5]);
+    coachLength = 26.0;
+    for (let i = 0; i < 16; i++) {
+      const z = -10.284 + (i * 1.36);
+      const rowStr = String(i + 1).padStart(2, '0');
+      addSeat('AC Chair', 'Window', [-1.18, 0.90, z], [0, 0, 0], [0.525, 1.1, 0.788], { unitName: `Seat_${rowStr}_L1` });
+      addSeat('AC Chair', 'Aisle',  [-0.66, 0.90, z], [0, 0, 0], [0.525, 1.1, 0.788], { unitName: `Seat_${rowStr}_L2` });
+      addSeat('AC Chair', 'Aisle',  [ 0.66, 0.90, z], [0, 0, 0], [0.525, 1.1, 0.788], { unitName: `Seat_${rowStr}_R1` });
+      addSeat('AC Chair', 'Window', [ 1.18, 0.90, z], [0, 0, 0], [0.525, 1.1, 0.788], { unitName: `Seat_${rowStr}_R2` });
     }
   } else if (classCode === 'EC') {
     coachLength = 14 * 2.0 + 2;

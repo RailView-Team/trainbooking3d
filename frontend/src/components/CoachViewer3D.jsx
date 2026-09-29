@@ -3,10 +3,10 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, ContactShadows, BakeShadows, Html, Text, PerspectiveCamera, useGLTF, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { Info, User, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Focus, RefreshCw } from 'lucide-react';
-import { generate3DLayout } from '../coachData';
+import { generate3DLayout, ccSeatMapping, CC_SEAT_MAPPING, getSeatAvailability } from '../coachData';
 
 // --- CUSTOM FIRST PERSON CONTROLS ---
-const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat, defaultPosition = [0, 1.6, 0] }) => {
+const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat, defaultPosition = [0, 1.6, 0], defaultRotation = [0, 0, 0] }) => {
   const { camera, gl } = useThree();
   const [keys, setKeys] = useState({ forward: false, backward: false, left: false, right: false });
 
@@ -96,13 +96,19 @@ const FirstPersonControls = ({ bounds, moveKeys, resetTrigger, focusedSeat, defa
     };
   }, [camera, gl]);
 
+  // Sync position and rotation on initial mount or when default orientation changes
+  useEffect(() => {
+    camera.position.set(...defaultPosition);
+    camera.rotation.set(...defaultRotation);
+  }, [defaultPosition, defaultRotation, camera]);
+
   // Handle Reset
   useEffect(() => {
     if (resetTrigger > 0) {
       camera.position.set(...defaultPosition);
-      camera.rotation.set(0, 0, 0);
+      camera.rotation.set(...defaultRotation);
     }
-  }, [resetTrigger, camera, defaultPosition]);
+  }, [resetTrigger, camera, defaultPosition, defaultRotation]);
 
   const [isFocusing, setIsFocusing] = useState(false);
   const targetPos = useRef(new THREE.Vector3());
@@ -483,6 +489,44 @@ function Realistic3ACCoach() {
   );
 }
 
+// --- REALISTIC CC COACH MODEL (coach.glb) ---
+function RealisticCCCoach() {
+  const { scene } = useGLTF('/models/coaches/cc/coach.glb');
+
+  // Hide any camera helper / placeholder geometry embedded in the GLB
+  useEffect(() => {
+    scene.traverse((child) => {
+      if (child.name && child.name.startsWith('CAMERA_')) {
+        child.visible = false;
+      }
+    });
+  }, [scene]);
+
+  return (
+    <group rotation={[0, -Math.PI / 2, 0]}>
+      {/* Model rendered efficiently without cloning */}
+      <primitive object={scene} />
+
+      {/* Ceiling LED strip lights evenly distributed along the passenger cabin */}
+      {[-9.5, -6.5, -3.5, 0, 3.5, 6.5, 9.5].map((z, i) => (
+        <group key={`cc-lights-${i}`}>
+          <pointLight position={[0, 3.2, z]} intensity={0.7} distance={7} color="#ffffff" />
+          <pointLight position={[-0.9, 2.9, z]} intensity={0.3} distance={4.5} color="#e0f2fe" />
+          <pointLight position={[0.9, 2.9, z]} intensity={0.3} distance={4.5} color="#e0f2fe" />
+        </group>
+      ))}
+
+      {/* Vestibule entrance and door lights */}
+      <pointLight position={[0, 2.7, -11.5]} intensity={0.65} distance={5} color="#f8fafc" />
+      <pointLight position={[0, 2.7, 11.5]} intensity={0.65} distance={5} color="#f8fafc" />
+
+      {/* Soft window ambient daylight illuminating the seats */}
+      <directionalLight position={[8, 5, 0]} intensity={0.65} color="#dbeafe" />
+      <directionalLight position={[-8, 5, 0]} intensity={0.65} color="#fef3c7" />
+    </group>
+  );
+}
+
 // --- INTERACTIVE BERTH HITBOX FOR REALISTIC 3AC ---
 const BerthHitbox3AC = ({ seat, status, selected, recommended, onToggle, setPreview }) => {
   const [hovered, setHovered] = useState(false);
@@ -581,6 +625,120 @@ const BerthHitbox3AC = ({ seat, status, selected, recommended, onToggle, setPrev
   );
 };
 
+// --- INTERACTIVE SEAT HITBOX FOR REALISTIC CC ---
+const SeatHitboxCC = ({ seat, status, selected, recommended, onToggle, setPreview }) => {
+  const [hovered, setHovered] = useState(false);
+  const isAvail = status === 'available';
+  const isRAC = status === 'RAC';
+  const isOcc = status === 'occupied';
+
+  let color = '#38bdf8';
+  let opacity = 0.001;
+  let emissive = '#000000';
+  let emissiveIntensity = 0;
+
+  if (selected) {
+    color = '#e11d48';
+    opacity = 0.38;
+    emissive = '#be123c';
+    emissiveIntensity = 0.7;
+  } else if (hovered) {
+    if (isAvail || isRAC) {
+      color = '#38bdf8';
+      opacity = 0.28;
+      emissive = '#0284c7';
+      emissiveIntensity = 0.45;
+    } else {
+      color = '#78716c';
+      opacity = 0.20;
+    }
+  } else if (isOcc) {
+    color = '#0f172a';
+    opacity = 0.22;
+    emissive = '#020617';
+    emissiveIntensity = 0.15;
+  } else if (isRAC) {
+    color = '#d97706';
+    opacity = 0.22;
+    emissive = '#b45309';
+    emissiveIntensity = 0.2;
+  }
+
+  const labelColor = selected ? '#ffffff' : (hovered ? '#ffffff' : (isOcc ? '#78716c' : '#e2e8f0'));
+
+  return (
+    <group position={seat.position} rotation={seat.rotation}>
+      {/* Invisible/Transparent Clickable Hitbox */}
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          setPreview({ ...seat, status });
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (isAvail || isRAC) onToggle(seat.id);
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = (isAvail || isRAC) ? 'pointer' : 'not-allowed';
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <boxGeometry args={seat.size} />
+        <meshStandardMaterial
+          color={color}
+          transparent
+          opacity={opacity}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          roughness={0.4}
+        />
+      </mesh>
+
+      {/* Subtle outline highlight only when hovered or selected */}
+      {(selected || hovered) && (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.BoxGeometry(...seat.size)]} />
+          <lineBasicMaterial
+            color={selected ? '#fda4af' : (isAvail || isRAC ? '#7dd3fc' : '#a8a29e')}
+            linewidth={2}
+          />
+        </lineSegments>
+      )}
+
+      {/* 3D Seat Label on top of headrest */}
+      <group position={[0, seat.size[1] / 2 + 0.02, 0]}>
+        <Text
+          fontSize={0.09}
+          color={labelColor}
+          anchorX="center"
+          anchorY="middle"
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          {seat.seatNumber || seat.id}
+        </Text>
+      </group>
+
+      {/* 3D Seat Label on the front seat cushion */}
+      <group position={[0, 0.58 - seat.position[1], 0]}>
+        <Text
+          fontSize={0.08}
+          color={labelColor}
+          anchorX="center"
+          anchorY="middle"
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          {seat.seatNumber || seat.id}
+        </Text>
+      </group>
+    </group>
+  );
+};
+
 // --- ERROR BOUNDARY FOR 3D MODEL FALLBACK ---
 class ModelErrorBoundary extends Component {
   constructor(props) {
@@ -591,7 +749,7 @@ class ModelErrorBoundary extends Component {
     return { hasError: true };
   }
   componentDidCatch(error) {
-    console.warn('Realistic 3AC model failed to load. Falling back to procedural coach:', error);
+    console.warn('Realistic 3D model failed to load. Falling back to procedural coach:', error);
     this.props.onError?.();
   }
   render() {
@@ -603,7 +761,7 @@ class ModelErrorBoundary extends Component {
 }
 
 // --- LOADING OVERLAY WITH DREI useProgress ---
-function CoachLoadingOverlay() {
+function CoachLoadingOverlay({ label = "Realistic Indian Coach" }) {
   const { active, progress } = useProgress();
   const [visible, setVisible] = useState(true);
 
@@ -624,7 +782,7 @@ function CoachLoadingOverlay() {
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-sky-400" />
         <div>
           <p className="text-base font-bold text-white tracking-wide">Loading 3D Coach Environment...</p>
-          <p className="text-xs text-white/50 mt-1">Realistic Indian 3AC Coach</p>
+          <p className="text-xs text-white/50 mt-1">{label}</p>
         </div>
         <div className="w-56 h-2 bg-white/10 rounded-full overflow-hidden mt-2">
           <div
@@ -641,6 +799,7 @@ function CoachLoadingOverlay() {
 // Preload assets
 useGLTF.preload('/models/train-seat.glb');
 useGLTF.preload('/models/coaches/3ac/coach.glb');
+useGLTF.preload('/models/coaches/cc/coach.glb');
 
 const Scene = ({
   classCode,
@@ -656,9 +815,11 @@ const Scene = ({
   resetTrigger,
   seatStatusMap,
   fallbackToProcedural,
-  onModelError
+  onModelError,
+  availabilityData
 }) => {
   const is3AC = classCode === '3A' && !fallbackToProcedural;
+  const isCC = classCode === 'CC' && !fallbackToProcedural;
   const { seats, coachLength } = useMemo(() => generate3DLayout(classCode), [classCode]);
 
   // Boundary constraints for the camera
@@ -671,34 +832,49 @@ const Scene = ({
         maxZ: 10.5,
       };
     }
+    if (isCC) {
+      return {
+        minX: -0.35,
+        maxX: 0.35,
+        minZ: -11.5,
+        maxZ: 11.5,
+      };
+    }
     return {
       minX: -0.7,
       maxX: 0.7,
       minZ: -coachLength / 2 - 1,
       maxZ: coachLength / 2 + 1,
     };
-  }, [is3AC, coachLength]);
+  }, [is3AC, isCC, coachLength]);
 
   const defaultPosition = useMemo(() => {
     if (is3AC) return [0, 1.6, -9.5];
+    if (isCC) return [0, 1.6, -11.0];
     return [0, 1.6, coachLength / 2 - 1];
-  }, [is3AC, coachLength]);
+  }, [is3AC, isCC, coachLength]);
+
+  const defaultRotation = useMemo(() => {
+    if (is3AC || isCC) return [0, Math.PI, 0];
+    return [0, 0, 0];
+  }, [is3AC, isCC]);
 
   return (
     <>
-      <PerspectiveCamera makeDefault position={defaultPosition} fov={75} near={0.1} far={50} />
+      <PerspectiveCamera makeDefault position={defaultPosition} rotation={defaultRotation} fov={75} near={0.1} far={50} />
       <FirstPersonControls
         bounds={bounds}
         moveKeys={moveKeys}
         resetTrigger={resetTrigger}
         focusedSeat={seats.find(s => s.id === focusedSeatId)}
         defaultPosition={defaultPosition}
+        defaultRotation={defaultRotation}
       />
 
-      <ambientLight intensity={is3AC ? 0.75 : 0.5} color="#ffffff" />
+      <ambientLight intensity={(is3AC || isCC) ? 0.75 : 0.5} color="#ffffff" />
       <directionalLight
         position={[10, 15, 5]}
-        intensity={is3AC ? 0.8 : 1.2}
+        intensity={(is3AC || isCC) ? 0.8 : 1.2}
         color="#fef08a"
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -714,13 +890,22 @@ const Scene = ({
             <Realistic3ACCoach />
           </Suspense>
         </ModelErrorBoundary>
+      ) : isCC ? (
+        <ModelErrorBoundary
+          fallback={<CoachShell length={coachLength} classCode={classCode} />}
+          onError={onModelError}
+        >
+          <Suspense fallback={null}>
+            <RealisticCCCoach />
+          </Suspense>
+        </ModelErrorBoundary>
       ) : (
         <CoachShell length={coachLength} classCode={classCode} />
       )}
 
       {seats.map((seat) => {
         const apiSeat = seatStatusMap[seat.id];
-        const status = apiSeat?.status || 'occupied';
+        const status = apiSeat?.status || (availabilityData ? 'occupied' : getSeatAvailability(coachId || '', seat.id));
         const seatId = apiSeat?.id ?? seat.id;
         const isSelected = selectedSeats.includes(seatId);
         const isRecommended = seat.id === recommendedSeatId && !isSelected;
@@ -736,6 +921,30 @@ const Scene = ({
               onToggle={() => handleToggleSeat(seatId)}
               setPreview={(preview) => {
                 const resolvedPreview = { ...preview, id: seatId, seatNumber: apiSeat?.seatNumber || seat.id };
+                setHoveredSeat(resolvedPreview);
+                onPreviewSeat?.(resolvedPreview);
+              }}
+            />
+          );
+        }
+
+        if (isCC) {
+          return (
+            <SeatHitboxCC
+              key={seat.id}
+              seat={seat}
+              status={status}
+              selected={isSelected}
+              recommended={isRecommended}
+              onToggle={() => handleToggleSeat(seatId)}
+              setPreview={(preview) => {
+                const resolvedPreview = {
+                  ...preview,
+                  id: seatId,
+                  seatNumber: apiSeat?.seatNumber || seat.id,
+                  type: seat.type || 'AC Chair',
+                  pos: seat.pos || (seat.unitName?.endsWith('1') ? 'Window' : 'Aisle')
+                };
                 setHoveredSeat(resolvedPreview);
                 onPreviewSeat?.(resolvedPreview);
               }}
@@ -793,8 +1002,10 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
 
   return (
     <div className={`w-full h-full relative bg-stone-950 ${immersive ? 'min-h-[calc(100dvh-1px)]' : ''}`}>
-      {/* Loading progress overlay for 3AC model */}
-      {classCode === '3A' && !fallbackToProcedural && <CoachLoadingOverlay />}
+      {/* Loading progress overlay for 3AC and CC models */}
+      {(classCode === '3A' || classCode === 'CC') && !fallbackToProcedural && (
+        <CoachLoadingOverlay label={classCode === 'CC' ? 'Realistic AC Chair Car (CC)' : 'Realistic Indian 3AC Coach'} />
+      )}
 
       {/* On-Screen Controls */}
       {!immersive && <div className="absolute bottom-6 left-6 z-10 flex flex-col items-center gap-2">
@@ -873,6 +1084,7 @@ export default function CoachViewer3D({ classCode, coachId, selectedSeats, recom
           seatStatusMap={seatStatusMap}
           fallbackToProcedural={fallbackToProcedural}
           onModelError={() => setFallbackToProcedural(true)}
+          availabilityData={availabilityData}
         />
       </Canvas>
 
