@@ -106,6 +106,7 @@ export default function PassengerDetailsPage() {
         `${encodeURIComponent(p.name)}|${p.age}|${p.gender}|${encodeURIComponent(p.berthPreference || 'none')}|${p.seatId}|${encodeURIComponent(getSeatNumber(p.seatId, idx))}`
       );
       searchParams.set('passengerData', passengerData.join(';;'));
+      searchParams.set('passengers', String(passengers.length));
       navigate(`/booking/review?${searchParams.toString()}`);
     }
   };

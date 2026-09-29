@@ -167,7 +167,7 @@ router.post("/", authenticateOptional, async (req, res, next) => {
                   OR
                   (b.boarding_stop_id IS NULL OR b.alighting_stop_id IS NULL)
               )
-            FOR UPDATE
+            FOR UPDATE OF bs, b
             `,
             [seatIds, tripId, journeyDate, qFromSeq, qToSeq]
         );
