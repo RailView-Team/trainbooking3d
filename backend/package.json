@@ -6,7 +6,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "db:init": "node database/initDb.js"
   },
   "dependencies": {
     "axios": "^1.20.0",
