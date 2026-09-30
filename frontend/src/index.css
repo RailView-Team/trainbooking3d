@@ -30,3 +30,16 @@ button, input, select { font: inherit; }
 .bg-stone-950 { background-color: #0f172a !important; }
 .bg-stone-900 { background-color: #1d4ed8 !important; }
 .text-stone-900 { color: #131b2e !important; }
+
+/* Ensure full-card click opens native date picker */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}

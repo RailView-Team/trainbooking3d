@@ -40,6 +40,17 @@ export default function BookingForm() {
   const [error, setError] = useState('');
 
   const dropdownRef = useRef(null);
+  const dateInputRef = useRef(null);
+
+  const handleDateClick = () => {
+    if (dateInputRef.current) {
+      try {
+        dateInputRef.current.showPicker();
+      } catch {
+        dateInputRef.current.focus();
+      }
+    }
+  };
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -101,15 +112,43 @@ export default function BookingForm() {
     navigate(`/trains?${params.toString()}`);
   };
 
-  const formatDateDisplay = (dateStr) => {
-    if (!dateStr) return 'Select Date';
+  const getDateInfo = (dateStr) => {
+    if (!dateStr) return { title: 'Select Date', subtitle: 'Choose journey date' };
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    dateObj.setHours(0, 0, 0, 0);
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const dateObj = new Date(dateStr + 'T00:00:00');
-    dateObj.setHours(0, 0, 0, 0);
-    if (dateObj.getTime() === today.getTime()) return 'Today';
-    return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const formattedDate = dateObj.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
+    const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+
+    let relative = '';
+    if (dateObj.getTime() === today.getTime()) {
+      relative = 'Today';
+    } else if (dateObj.getTime() === tomorrow.getTime()) {
+      relative = 'Tomorrow';
+    }
+
+    const subtitle = relative ? `${relative} · ${weekday}` : weekday;
+
+    return {
+      title: formattedDate,
+      subtitle,
+    };
   };
+
+  const dateInfo = getDateInfo(date);
 
   const filteredStations = stations.filter(s =>
     (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -287,24 +326,38 @@ export default function BookingForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
           
           {/* Date Picker */}
-          <div className="lg:col-span-4 bg-[#f8faff] rounded-2xl p-4 border border-stone-200 hover:border-blue-300 transition-all cursor-pointer relative group">
+          <div
+            onClick={handleDateClick}
+            className="lg:col-span-4 bg-[#f8faff] rounded-2xl p-4 border border-stone-200 hover:border-blue-300 transition-all cursor-pointer relative group"
+          >
             <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
               Date
             </span>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-[#2563eb]" />
-                <span className="text-stone-900 font-extrabold text-base lg:text-lg">
-                  {formatDateDisplay(date)}
-                </span>
+                <Calendar className="w-5 h-5 text-[#2563eb] flex-shrink-0" />
+                <div>
+                  <span className="text-stone-900 font-extrabold text-base lg:text-lg block leading-none">
+                    {dateInfo.title}
+                  </span>
+                  <span className="text-xs font-semibold text-stone-400 mt-1 block">
+                    {dateInfo.subtitle}
+                  </span>
+                </div>
               </div>
-              <ChevronDown className="w-4 h-4 text-stone-400" />
+              <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-blue-500 transition-colors" />
             </div>
             <input
+              ref={dateInputRef}
               type="date"
               value={date}
               min={getLocalDate()}
               onChange={(e) => setDate(e.target.value)}
+              onClick={(e) => {
+                try {
+                  e.target.showPicker();
+                } catch {}
+              }}
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
             />
           </div>
